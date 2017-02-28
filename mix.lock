@@ -1,0 +1,2 @@
+%{"espec": {:hex, :espec, "1.3.0", "79430c7291aa940a375f62eb740d5038fe68f58c2a5ac25b89b5d35f86aed31f", [:mix], [{:meck, "~> 0.8.4", [hex: :meck, optional: false]}]},
+  "meck": {:hex, :meck, "0.8.4", "59ca1cd971372aa223138efcf9b29475bde299e1953046a0c727184790ab1520", [:make, :rebar], []}}
