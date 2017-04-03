@@ -29,5 +29,54 @@ defmodule Metro2Spec do
         expect(described_module().account_status_needs_payment_rating?("32")).to be_falsy()
       end
     end
+
+    describe "Metro2.alphanumeric_to_metro2", focus: true do
+      before required_length: 10, permitted_chars: ~r/\A([[:alnum:]]|\s)+\z/, name: "Foo"
+      it "returns an string with required_length space characters when val = nil " do
+        expect(described_module().alphanumeric_to_metro2(nil, shared.required_length, shared.permitted_chars, shared.name ))
+        |> to(eq(String.duplicate(" ", shared.required_length)))
+      end
+
+      it "returns an string with required_length space characters when val = nil " do
+        expect(described_module().alphanumeric_to_metro2("", shared.required_length, shared.permitted_chars, shared.name ))
+        |> to(eq(String.duplicate(" ", shared.required_length)))
+      end
+
+      context "val contains an invalid character" do
+        it "raises an ArgumentError exception" do
+          expect( fn-> described_module().alphanumeric_to_metro2("Foo%", shared.required_length, shared.permitted_chars, shared.name) end)
+          |> to(raise_exception ArgumentError,"Content (Foo%) contains invalid characters in field '#{shared.name}'")
+        end
+      end
+
+      context "val is a valid string" do
+        context "val's size is longer than the required length" do
+          it "slices of the overhead at the end of the string" do
+            test_val = "a" |> String.duplicate(shared.required_length + 1 )
+            expect(described_module().alphanumeric_to_metro2(test_val, shared.required_length, shared.permitted_chars, shared.name))
+            |> to(eq(String.duplicate( "a" ,shared.required_length)))
+          end
+        end
+
+        context " val is less or equal than the required length" do
+          it "returns a string with the length equals the required length" do
+            test_val = "x"
+            expect(described_module().alphanumeric_to_metro2(test_val, shared.required_length, shared.permitted_chars, shared.name)
+                   |> String.length
+            )
+            |> to(eq shared.required_length)
+          end
+
+          it "returns the val with trailing spaces as fillup" do
+            test_val = "x"
+            result_string = test_val <>  (" " |> String.duplicate( shared.required_length - String.length(test_val))) 
+            expect(described_module().alphanumeric_to_metro2(test_val, shared.required_length, shared.permitted_chars, shared.name)
+            )
+            |> to(eq result_string)
+          end
+        end
+      end
+
+    end
   end
 end
