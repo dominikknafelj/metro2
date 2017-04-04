@@ -69,7 +69,7 @@ defmodule Metro2Spec do
 
           it "returns the val with trailing spaces as fillup" do
             test_val = "x"
-            result_string = test_val <>  (" " |> String.duplicate( shared.required_length - String.length(test_val))) 
+            result_string = test_val <>  (" " |> String.duplicate( shared.required_length - String.length(test_val)))
             expect(described_module().alphanumeric_to_metro2(test_val, shared.required_length, shared.permitted_chars, shared.name)
             )
             |> to(eq result_string)
@@ -77,6 +77,35 @@ defmodule Metro2Spec do
         end
       end
 
+    end
+    describe "Metro2.numeric_to_metro2", focus: true do
+      before required_length: 9
+      it "returns an string with required_length space characters when val = nil " do
+        expect(described_module().numeric_to_metro2(nil, shared.required_length, false ))
+        |> to(eq(String.duplicate("0", shared.required_length)))
+      end
+
+      it "returns an string with required_length space characters when val = nil " do
+        expect(described_module().numeric_to_metro2("", shared.required_length, false ))
+        |> to(eq(String.duplicate("0", shared.required_length)))
+      end
+
+      context "val contains an invalid character" do
+        it "raises an ArgumentError exception" do
+          expect( fn-> described_module().numeric_to_metro2("3.4s", shared.required_length, false) end)
+          |> to(raise_exception ArgumentError,"field (3.4s) must be numeric")
+        end
+      end
+
+      context "val is a valid numeric" do
+        context "val is an monetary value" do
+          it "it returns 999999999 when the value is ge 1,000,000,000" do
+            test_val = "1000000000.78"
+            expect(described_module().numeric_to_metro2(test_val, shared.required_length, true))
+            |> to(eq(String.duplicate( "9" ,shared.required_length)))
+          end
+        end
+      end
     end
   end
 end

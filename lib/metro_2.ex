@@ -162,8 +162,9 @@ defmodule Metro2 do
   @alphanumeric_plus_dash            ~r/\A([[:alnum:]]|\s|\-)+\z/
   @alphanumeric_plus_dot_dash_slash  ~r/\A([[:alnum:]]|\s|\-|\.|\\|\/)+\z/
   @numeric                           ~r/\A\d+\.?\d*\z/
-
+  @integer                           ~r/\d+\z/
   @fixed_length 426
+  @decimal_seperator "."
 
   def portfolio_type, do: @portfolio_type
   def account_type, do: @account_type
@@ -184,6 +185,7 @@ defmodule Metro2 do
   def alphanumeric_plus_dash, do: @alphanumeric_plus_dash
   def alphanumeric_plus_dot_dash_slash, do: @alphanumeric_plus_dot_dash_slash
   def numeric, do: @numeric
+  def integer, do: @integer
   def fixed_length, do: @fixed_length
 
   def account_status_needs_payment_rating?(account_status) do
@@ -193,11 +195,11 @@ defmodule Metro2 do
                           @account_status[:voluntary_surrender]]
   end
 
-  def alphanumeric_to_metro2(nil = val, required_length, permitted_chars, name) do
+  def alphanumeric_to_metro2(nil = val, required_length, _, _ ) do
     String.duplicate(" ", required_length)
   end
 
-  def alphanumeric_to_metro2("" = val, required_length, permitted_chars, name) do
+  def alphanumeric_to_metro2("" = val, required_length,  _, _ ) do
     String.duplicate(" ", required_length)
   end
 
@@ -213,4 +215,35 @@ defmodule Metro2 do
     end
   end
 
+  def strip_fractions(val) do
+    cond do
+      Regex.match?(numeric, val) -> val
+                                    |> String.split(".", parts: 2)
+                                    |> List.first
+      true                       -> raise ArgumentError, message: "field (#{val}) must be numeric"
+    end
+  end
+
+
+  def numeric_to_metro2(nil = val, required_length, _) do
+    String.duplicate("0", required_length)
+  end
+
+  def numeric_to_metro2("" = val, required_length, _) do
+    String.duplicate("0", required_length)
+  end
+
+
+  def numeric_to_metro2(val, required_length, is_monetary) do
+      # Right justified and zero-filled
+      number = strip_fractions(val)
+    cond do
+      # when we have a monetary value and we exceed the billion we limit to 999,999,999
+      is_monetary && String.to_integer(number) >= 1000000000  -> String.duplicate("9", required_length)
+      # normal case, we return the value with leading 0 as fillup
+      String.length(number) <= required_length              -> ("0" |> String.duplicate(required_length - String.length(number))) <> number
+      # when we don't have a monetary value and we exceed the required_length
+      true                                                  -> raise ArgumentError, message: "numeric field (#{val}) is too long (max #{required_length})"
+    end
+  end
 end
