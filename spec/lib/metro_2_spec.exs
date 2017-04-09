@@ -76,8 +76,8 @@ defmodule Metro2Spec do
           end
         end
       end
-
     end
+
     describe "Metro2.numeric_to_metro2", focus: true do
       before required_length: 9
       it "returns an string with required_length space characters when val = nil " do
@@ -98,11 +98,24 @@ defmodule Metro2Spec do
       end
 
       context "val is a valid numeric" do
-        context "val is an monetary value" do
-          it "it returns 999999999 when the value is ge 1,000,000,000" do
+        context "val is bigger than 999,999,999" do
+          it "returns 999999999 when is_monetary" do
             test_val = "1000000000.78"
             expect(described_module().numeric_to_metro2(test_val, shared.required_length, true))
             |> to(eq(String.duplicate( "9" ,shared.required_length)))
+          end
+          it "raises an Argument error" do
+            test_val = "1000000000.78"
+            expect( fn-> described_module().numeric_to_metro2(test_val, shared.required_length, false) end )
+            |> to(raise_exception ArgumentError, "numeric field (#{test_val}) is too long (max #{shared.required_length})")
+          end
+        end
+        context "val is smaller than 999,999,999" do
+          it "returns the floored value with leading zeros as fillups" do
+            test_val = "34.21"
+            result_string = "000000034"
+            expect(described_module().numeric_to_metro2(test_val, shared.required_length, false))
+            |> to(eq(result_string))
           end
         end
       end
