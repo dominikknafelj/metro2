@@ -1,5 +1,5 @@
 require IEx;
-defmodule Metro2Spec do
+defmodule Metro2.BaseSpec do
   use ESpec
 
   example_group do
@@ -90,29 +90,22 @@ defmodule Metro2Spec do
         |> to(eq(String.duplicate("0", shared.required_length)))
       end
 
-      context "val contains an invalid character" do
-        it "raises an ArgumentError exception" do
-          expect( fn-> described_module().numeric_to_metro2("3.4s", shared.required_length, false) end)
-          |> to(raise_exception ArgumentError,"field (3.4s) must be numeric")
-        end
-      end
-
       context "val is a valid numeric" do
         context "val is bigger than 999,999,999" do
           it "returns 999999999 when is_monetary" do
-            test_val = "1000000000.78"
+            test_val = 1000000000.78
             expect(described_module().numeric_to_metro2(test_val, shared.required_length, true))
             |> to(eq(String.duplicate( "9" ,shared.required_length)))
           end
           it "raises an Argument error" do
-            test_val = "1000000000.78"
+            test_val = 1000000000.78
             expect( fn-> described_module().numeric_to_metro2(test_val, shared.required_length, false) end )
             |> to(raise_exception ArgumentError, "numeric field (#{test_val}) is too long (max #{shared.required_length})")
           end
         end
         context "val is smaller than 999,999,999" do
           it "returns the floored value with leading zeros as fillups" do
-            test_val = "34.21"
+            test_val = 34.21
             result_string = "000000034"
             expect(described_module().numeric_to_metro2(test_val, shared.required_length, false))
             |> to(eq(result_string))

@@ -17,7 +17,7 @@ defmodule Metro2.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger]]
+    [applications: [:timex], extra_applications: [:logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -30,6 +30,6 @@ defmodule Metro2.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:espec, "~> 1.3.0", only: :test}]
+    [{:timex, "~> 3.0"}, {:espec, "~> 1.3.0", only: :test}]
   end
 end

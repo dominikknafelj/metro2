@@ -1,5 +1,5 @@
 require IEx;
-defmodule Metro2 do
+defmodule Metro2.Base do
   @portfolio_type %{
       line_of_credit: "C",
       installment:    "I",
@@ -165,6 +165,7 @@ defmodule Metro2 do
   @integer                           ~r/\d+\z/
   @fixed_length 426
   @decimal_seperator "."
+  @version_string "0.1"
 
   def portfolio_type, do: @portfolio_type
   def account_type, do: @account_type
@@ -187,6 +188,7 @@ defmodule Metro2 do
   def numeric, do: @numeric
   def integer, do: @integer
   def fixed_length, do: @fixed_length
+  def version_string, do: @version_string
 
   def account_status_needs_payment_rating?(account_status) do
       account_status in [@account_status[:account_transferred], @account_status[:closed],
@@ -211,19 +213,9 @@ defmodule Metro2 do
     if String.length(val) > required_length do
       String.slice(val, 0..(required_length-1))
     else
-      val <> String.duplicate(" ", required_length - String.length(val))
+      val |> String.pad_trailing(required_length)
     end
   end
-
-  def strip_fractions(val) do
-    cond do
-      Regex.match?(numeric, val) -> val
-                                    |> String.split(".", parts: 2)
-                                    |> List.first
-      true                       -> raise ArgumentError, message: "field (#{val}) must be numeric"
-    end
-  end
-
 
   def numeric_to_metro2(nil = val, required_length, _) do
     String.duplicate("0", required_length)
@@ -235,15 +227,29 @@ defmodule Metro2 do
 
 
   def numeric_to_metro2(val, required_length, is_monetary) do
-      # Right justified and zero-filled
-      number = strip_fractions(val)
-    cond do
+    case normalize_numeric(val) |> Tuple.append(is_monetary) do
       # when we have a monetary value and we exceed the billion we limit to 999,999,999
-      is_monetary && String.to_integer(number) >= 1000000000  -> String.duplicate("9", required_length)
+      {x, _,  true} when  x >= 1_000_000_000 -> String.duplicate("9", required_length)
       # normal case, we return the value with leading 0 as fillup
-      String.length(number) <= required_length              -> ("0" |> String.duplicate(required_length - String.length(number))) <> number
+      {x, length, _ } when length <= required_length ->  x |> Integer.to_string |> String.pad_leading( required_length, "0" )
       # when we don't have a monetary value and we exceed the required_length
-      true                                                  -> raise ArgumentError, message: "numeric field (#{val}) is too long (max #{required_length})"
+      _ -> raise ArgumentError, message: "numeric field (#{val}) is too long (max #{required_length})"
     end
   end
+
+  defp normalize_numeric(val) when is_binary(val) do
+    case Float.parse(val) do
+      {x, ""} -> normalize_numeric(x)
+      _ -> raise ArgumentError, message: "value #{val} is not parseable to Float (strict)"
+    end
+  end
+
+  defp normalize_numeric(val) when is_integer(val) do
+    {val, (Integer.to_string(val) |> String.length())}
+  end
+
+  defp normalize_numeric(val) when is_float(val) do
+    val |> Float.floor |> round() |> normalize_numeric()
+  end
+
 end
