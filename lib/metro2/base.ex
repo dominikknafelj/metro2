@@ -189,6 +189,7 @@ defmodule Metro2.Base do
   def integer, do: @integer
   def fixed_length, do: @fixed_length
   def version_string, do: @version_string
+  def decimal_seperator, do: @decimal_seperator
 
   def account_status_needs_payment_rating?(account_status) do
       account_status in [@account_status[:account_transferred], @account_status[:closed],
@@ -197,17 +198,17 @@ defmodule Metro2.Base do
                           @account_status[:voluntary_surrender]]
   end
 
-  def alphanumeric_to_metro2(nil = val, required_length, _, _ ) do
+  def alphanumeric_to_metro2(nil, required_length, _ ) do
     String.duplicate(" ", required_length)
   end
 
-  def alphanumeric_to_metro2("" = val, required_length,  _, _ ) do
+  def alphanumeric_to_metro2("", required_length, _ ) do
     String.duplicate(" ", required_length)
   end
 
-  def alphanumeric_to_metro2(val, required_length, permitted_chars, name) do
+  def alphanumeric_to_metro2(val, required_length, permitted_chars) do
     unless Regex.match?(permitted_chars, val) do
-      raise ArgumentError, message: "Content (#{val}) contains invalid characters in field '#{name}'"
+      raise ArgumentError, message: "Content (#{val}) contains invalid characters"
     end
 
     if String.length(val) > required_length do
@@ -217,11 +218,11 @@ defmodule Metro2.Base do
     end
   end
 
-  def numeric_to_metro2(nil = val, required_length, _) do
+  def numeric_to_metro2( nil , required_length, _) do
     String.duplicate("0", required_length)
   end
 
-  def numeric_to_metro2("" = val, required_length, _) do
+  def numeric_to_metro2( "" , required_length, _) do
     String.duplicate("0", required_length)
   end
 
