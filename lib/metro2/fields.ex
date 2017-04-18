@@ -42,4 +42,12 @@ defmodule Metro2.Fields do
       |> Metro2.Base.numeric_to_metro2(14, false)
     end
   end
+
+  def put(%{} = parent_struct, parent_struct_key, value) do
+    field = case Map.get(parent_struct, parent_struct_key) do
+              x when is_map(x) -> Map.put(x, :value, value)
+              _ -> raise ArgumentError, message: "Field #{parent_struct_key} couldn't be found or is not a map." 
+            end
+    Map.put(parent_struct, parent_struct_key, field)
+  end
 end

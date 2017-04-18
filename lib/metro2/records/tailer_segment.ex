@@ -1,5 +1,9 @@
-defmodule Metro.Records.TailerSegment do
-  @structure [
+defmodule Metro2.Records.TailerSegment do
+
+  alias Metro2.Fields.Alphanumeric
+  alias Metro2.Fields.Numeric
+
+  defstruct [
     record_descriptor_word: %Numeric{ value: Metro2.Base.fixed_length, required_length: 4 },
     record_identifier: %Alphanumeric{ value: "TRAILER", required_length: 6 },
     total_base_records: %Numeric{ required_length: 9, },
@@ -11,7 +15,7 @@ defmodule Metro.Records.TailerSegment do
     total_satus_code_da: %Numeric{ required_length: 9 },
     total_satus_code_05: %Numeric{ required_length: 9 },
     total_satus_code_11: %Numeric{ required_length: 9 },
-    total_satus_code_:13 %Numeric{ required_length: 9 },
+    total_satus_code_13: %Numeric{ required_length: 9 },
     total_satus_code_61: %Numeric{ required_length: 9 },
     total_satus_code_62: %Numeric{ required_length: 9 },
     total_satus_code_63: %Numeric{ required_length: 9 },
@@ -49,5 +53,4 @@ defmodule Metro.Records.TailerSegment do
     reserved_2: %Alphanumeric{ required_length: 19, value: nil },
   ]
 
-  def stucture, do: @structure
 end

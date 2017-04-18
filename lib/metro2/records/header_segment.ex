@@ -22,5 +22,5 @@ defmodule Metro2.Records.HeaderSegment do
     software_vendor_name: %Alphanumeric{ required_length: 40, value: "Metro2Elix" },
     software_version_number: %Alphanumeric{ required_length: 5, value: Metro2.Base.version_string },
     reserved: %Alphanumeric{ required_length: 156, value: nil }
-  ]
+   ]
 end
