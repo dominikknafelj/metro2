@@ -50,4 +50,11 @@ defmodule Metro2.Fields do
             end
     Map.put(parent_struct, parent_struct_key, field)
   end
+
+  def get(%{} = parent_struct, parent_struct_key) do
+    case Map.get(parent_struct, parent_struct_key) do
+      x when is_map(x) -> Map.get(x, :value)
+      _ -> raise ArgumentError, message: "Field #{parent_struct_key} couldn't be found or is not a map." 
+    end
+  end
 end

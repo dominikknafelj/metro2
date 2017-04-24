@@ -3,14 +3,65 @@ defmodule Metro2.File do
   alias Metro2.Records.BaseSegement
   alias Metro2.Records.TailerSegment
 
+  import Metro2.Fields, only: [get: 2, put: 3]
+
   defstruct [
     header: %HeaderSegment{},
     base_segments: [],
     tailer: %TailerSegment{}
   ]
 
+  @field_mapping %{
+    ecoa_code: :ecoa_code_z,
+    social_security_number: :total_social_security_numbers,
+    date_of_birth: :total_date_of_births
+    telephone_number: :total_telephome_numbers
+  }
 
-  #   def serialize( %Metro2.File{} = file )
+  def add_base_segment( %Metro2.File{} = file, %BaseSegement{} = segment) do
+    list = Map.get(file, :base_segments)
+    Map.put(file, :base_segments, [segment | list])
+  end
+
+  def trailer_from_base_segments do
+    
+
+  end
+
+  def serialize( %Metro2.File{} = file ) do
+    
+  end
+
+  def count_base_segment(%Metro2.Records.TailerSegement{} = tailer_segment, []), do: tailer_segment
+
+  def count_base_segment(%Metro2.Records.TailerSegement{} = tailer_segment, [head | tail] = base_segments) do
+    tailer_segment
+    |> increment_status_code(head)
+    |> conditional_increment( head, :social_security_number)
+    |> conditional_increment( head, :date_of_birth)
+    |> conditional_increment( head, :telephone_number)
+    |> conditional_increment( head, :ecoa_code)
+    |> count_base_segment(tail)
+  end
+
+  defp increment_status_code(%TailerSegment{} = tailer, %{} = segment) do
+    tailer_field = "total_status_code_" <> get(segment, :account_status) |> String.downcase |> String.to_atom
+    tailer |> TailerSegment.increment_field(tailer_field)
+  end
+
+  defp conditional_increment(%TailerSegment{} = tailer, %{} = segment, :ecoa_code = field) do
+    case get(segment, field) do
+      x when x == "z" -> TailerSegment.increment_field(tailer, :ecoa_code_z)
+      _ -> tailer
+    end
+  end
+
+  defp conditional_increment(%TailerSegment{} = tailer ,%{} = segment, field) do
+    case get(segment, field) do
+      nil -> tailer
+      _   -> TailerSegment.increment_field(tailer, Map.get(@field_mapping, field))
+    end
+  end
   #     segments = []
   #     segments << @header
   #     @base_segments.each { |base| segments << base }
