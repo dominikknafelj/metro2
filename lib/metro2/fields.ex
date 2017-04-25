@@ -57,4 +57,9 @@ defmodule Metro2.Fields do
       _ -> raise ArgumentError, message: "Field #{parent_struct_key} couldn't be found or is not a map." 
     end
   end
+
+  def to_metro(%{} = field_struct ) do
+    field_struct.__struct__
+    |> apply(:to_metro2, [field_struct])
+  end
 end

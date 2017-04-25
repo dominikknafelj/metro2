@@ -57,7 +57,7 @@ defmodule Metro2.Records.TailerSegment do
   def increment_field(%Metro2.Records.TailerSegment{} = segment, field ) do
     case get(segment, field) do
       x when x == nil -> put(segment, field, 1)
-      x when x is_integer -> put(segment, field, x+1)
+      x when is_integer(x) -> put(segment, field, x+1)
       x -> raise ArgumentError, message: "Field '#{field}' has invalid value #{x}, it has to be an integer!"
     end
   end

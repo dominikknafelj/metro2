@@ -1,6 +1,6 @@
 defmodule Metro2.File do
   alias Metro2.Records.HeaderSegment
-  alias Metro2.Records.BaseSegement
+  alias Metro2.Records.BaseSegment
   alias Metro2.Records.TailerSegment
 
   import Metro2.Fields, only: [get: 2, put: 3]
@@ -14,11 +14,11 @@ defmodule Metro2.File do
   @field_mapping %{
     ecoa_code: :ecoa_code_z,
     social_security_number: :total_social_security_numbers,
-    date_of_birth: :total_date_of_births
+    date_of_birth: :total_date_of_births,
     telephone_number: :total_telephome_numbers
   }
 
-  def add_base_segment( %Metro2.File{} = file, %BaseSegement{} = segment) do
+  def add_base_segment( %Metro2.File{} = file, %BaseSegment{} = segment) do
     list = Map.get(file, :base_segments)
     Map.put(file, :base_segments, [segment | list])
   end
@@ -29,12 +29,13 @@ defmodule Metro2.File do
   end
 
   def serialize( %Metro2.File{} = file ) do
-    
+     tailer_segment = %TailerSegment{} |> count_base_segment(file.base_segments)
+     file |> Map.put(:tailer, tailer_segment)
   end
 
-  def count_base_segment(%Metro2.Records.TailerSegement{} = tailer_segment, []), do: tailer_segment
+  def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, []), do: tailer_segment
 
-  def count_base_segment(%Metro2.Records.TailerSegement{} = tailer_segment, [head | tail] = base_segments) do
+  def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, [head | tail] = base_segments) do
     tailer_segment
     |> increment_status_code(head)
     |> conditional_increment( head, :social_security_number)
