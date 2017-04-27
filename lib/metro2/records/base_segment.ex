@@ -5,6 +5,9 @@ defmodule Metro2.Records.BaseSegment do
   alias Metro2.Fields.TimeStamp
   alias Metro2.Fields.Date
 
+    import Metro2.Segment, only: [to_metro2: 1]
+
+
   defstruct [
     record_descriptor_word: %Numeric{value: Metro2.Base.fixed_length, required_length: 4 },
     processing_indicator: %Alphanumeric{ value: 1, required_length: 1}, # always 1

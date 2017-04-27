@@ -3,6 +3,7 @@ defmodule Metro2.Records.TailerSegment do
   alias Metro2.Fields.Alphanumeric
   alias Metro2.Fields.Numeric
   import Metro2.Fields, only: [get: 2, put: 3]
+  import Metro2.Segment, only: [to_metro2: 1]
 
   defstruct [
     record_descriptor_word: %Numeric{ value: Metro2.Base.fixed_length, required_length: 4 },

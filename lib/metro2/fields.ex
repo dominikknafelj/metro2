@@ -29,7 +29,10 @@ defmodule Metro2.Fields do
     defstruct [:value]
 
     def to_metro2(field) do
-      Timex.format!(field.value, "%m%d%Y", :strftime)
+      case field.value do
+        nil -> 0
+        _ -> Timex.format!(field.value, "%m%d%Y", :strftime)
+      end
       |> Metro2.Base.numeric_to_metro2(8, false)
     end
   end
@@ -38,7 +41,10 @@ defmodule Metro2.Fields do
     defstruct [:value]
 
     def to_metro2(field) do
-      Timex.format!(field.value, "%m%d%Y%H%M%S", :strftime)
+      case field.value do
+        nil -> 0
+        _ -> Timex.format!(field.value, "%m%d%Y%H%M%S", :strftime)
+      end
       |> Metro2.Base.numeric_to_metro2(14, false)
     end
   end
@@ -58,7 +64,7 @@ defmodule Metro2.Fields do
     end
   end
 
-  def to_metro(%{} = field_struct ) do
+  def to_metro2(%{} = field_struct ) do
     field_struct.__struct__
     |> apply(:to_metro2, [field_struct])
   end

@@ -4,6 +4,8 @@ defmodule Metro2.File do
   alias Metro2.Records.TailerSegment
 
   import Metro2.Fields, only: [get: 2, put: 3]
+  import Metro2.Segment, only: [to_metro2: 1]
+
 
   defstruct [
     header: %HeaderSegment{},
@@ -23,14 +25,12 @@ defmodule Metro2.File do
     Map.put(file, :base_segments, [segment | list])
   end
 
-  def trailer_from_base_segments do
-    
-
-  end
-
   def serialize( %Metro2.File{} = file ) do
      tailer_segment = %TailerSegment{} |> count_base_segment(file.base_segments)
-     file |> Map.put(:tailer, tailer_segment)
+     file 
+     |> Map.put(:tailer, tailer_segment) 
+     |> to_metro2 
+     |> Enum.join("\n")
   end
 
   def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, []), do: tailer_segment

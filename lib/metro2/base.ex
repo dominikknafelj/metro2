@@ -165,7 +165,7 @@ defmodule Metro2.Base do
   @integer                           ~r/\d+\z/
   @fixed_length 426
   @decimal_seperator "."
-  @version_string "0.1"
+  @version_string "01"
 
   def portfolio_type, do: @portfolio_type
   def account_type, do: @account_type
@@ -204,6 +204,14 @@ defmodule Metro2.Base do
 
   def alphanumeric_to_metro2("", required_length, _ ) do
     String.duplicate(" ", required_length)
+  end
+
+  def alphanumeric_to_metro2(val, required_length, permitted_chars) when is_number(val) do
+    case val do
+      x when is_float(x) -> Float.to_string(x)
+      x when is_integer(x) -> Integer.to_string(x)
+    end
+    |> alphanumeric_to_metro2(required_length, permitted_chars)
   end
 
   def alphanumeric_to_metro2(val, required_length, permitted_chars) do
