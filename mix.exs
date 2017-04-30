@@ -40,4 +40,14 @@ defmodule Metro2.Mixfile do
     {:credo, "~> 0.7", only: [:dev, :test]},
     {:ex_doc, "~> 0.14", only: :dev, runtime: false}]
   end
+
+  defp package do
+    [
+      name: :metro2,
+      files: ["lib", "priv", "mix.exs", "README*", "readme*", "LICENSE*", "license*"],
+      maintainers: ["Dominik Knafelj"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/dominikknafelj/metro2"}
+    ]
+  end
 end
