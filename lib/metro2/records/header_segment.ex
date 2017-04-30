@@ -4,9 +4,6 @@ defmodule Metro2.Records.HeaderSegment do
   alias Metro2.Fields.Numeric
   alias Metro2.Fields.Date
 
-  import Metro2.Segment, only: [to_metro2: 1]
-
-
   defstruct [
     record_descriptor_word: %Numeric{ value: Metro2.Base.fixed_length, required_length: 4 },
     record_identifier: %Alphanumeric{ value: "HEADER", required_length: 6 },
@@ -26,4 +23,6 @@ defmodule Metro2.Records.HeaderSegment do
     software_version_number: %Alphanumeric{ required_length: 5, value: Metro2.Base.version_string },
     reserved: %Alphanumeric{ required_length: 156, value: nil }
    ]
+  
+  def to_metro2(segment), do: Metro2.Segment.to_metro2(segment)
 end

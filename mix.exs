@@ -30,6 +30,8 @@ defmodule Metro2.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:timex, "~> 3.0"}, {:espec, "~> 1.3.0", only: :test}]
+    [{:timex, "~> 3.0"},
+    {:espec, "~> 1.3.0", only: :test},
+    {:credo, "~> 0.7", only: [:dev, :test]}]
   end
 end

@@ -1,4 +1,3 @@
-require IEx;
 defmodule Metro2.Base do
   @portfolio_type %{
       line_of_credit: "C",

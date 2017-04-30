@@ -2,9 +2,10 @@ defmodule Metro2.File do
   alias Metro2.Records.HeaderSegment
   alias Metro2.Records.BaseSegment
   alias Metro2.Records.TailerSegment
+  alias Metro2.Segment
 
-  import Metro2.Fields, only: [get: 2, put: 3]
-  import Metro2.Segment, only: [to_metro2: 1]
+  import Metro2.Fields, only: [get: 2]
+
 
 
   defstruct [
@@ -17,7 +18,7 @@ defmodule Metro2.File do
     ecoa_code: :ecoa_code_z,
     social_security_number: :total_social_security_numbers,
     date_of_birth: :total_date_of_births,
-    telephone_number: :total_telephome_numbers
+    telephone_number: :total_telephone_numbers
   }
 
   def add_base_segment( %Metro2.File{} = file, %BaseSegment{} = segment) do
@@ -29,13 +30,14 @@ defmodule Metro2.File do
      tailer_segment = %TailerSegment{} |> count_base_segment(file.base_segments)
      file 
      |> Map.put(:tailer, tailer_segment) 
-     |> to_metro2 
+     |> to_metro2
+     |> List.flatten
      |> Enum.join("\n")
   end
 
   def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, []), do: tailer_segment
 
-  def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, [head | tail] = base_segments) do
+  def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, [head | tail]) do
     tailer_segment
     |> increment_status_code(head)
     |> conditional_increment( head, :social_security_number)
@@ -46,9 +48,13 @@ defmodule Metro2.File do
   end
 
   defp increment_status_code(%TailerSegment{} = tailer, %{} = segment) do
-    tailer_field = "total_status_code_" <> get(segment, :account_status) |> String.downcase |> String.to_atom
+    account_status = get(segment, :account_status) |> account_status_to_s()
+    tailer_field = "total_status_code_" <> account_status |> String.downcase |> String.to_atom
     tailer |> TailerSegment.increment_field(tailer_field)
   end
+
+  defp account_status_to_s(status) when is_integer(status), do: Integer.to_string(status)
+  defp account_status_to_s(status) when is_binary(status), do: status
 
   defp conditional_increment(%TailerSegment{} = tailer, %{} = segment, :ecoa_code = field) do
     case get(segment, field) do
@@ -57,69 +63,15 @@ defmodule Metro2.File do
     end
   end
 
-  defp conditional_increment(%TailerSegment{} = tailer ,%{} = segment, field) do
+  defp conditional_increment(%TailerSegment{} = tailer, %{} = segment, field) do
     case get(segment, field) do
       nil -> tailer
       _   -> TailerSegment.increment_field(tailer, Map.get(@field_mapping, field))
     end
   end
-  #     segments = []
-  #     segments << @header
-  #     @base_segments.each { |base| segments << base }
-  #     @trailer ||= trailer_from_base_segments
-  #     segments << @trailer
-  #
-  #     segments.collect { |r| r.to_metro2 }.join("\n") + "\n"
-  #   end
-  #
-  #   def trailer_from_base_segments
-  #     status_code_count = Hash.new(0)
-  #     num_ssn = 0
-  #     num_dob = 0
-  #     num_telephone = 0
-  #     num_ecoa_code_z = 0
-  #
-  #     @base_segments.each do |base|
-  #       status_code_count[base.account_status.upcase] += 1
-  #       num_ssn += 1 if  base.social_security_number
-  #       num_dob += 1 if base.date_of_birth
-  #       num_telephone += 1 if base.telephone_number
-  #       num_ecoa_code_z += 1 if base.ecoa_code == 'Z'
-  #     end
-  #
-  #     trailer = Records::TrailerSegment.new
-  #     trailer.total_base_records = @base_segments.size
-  #     trailer.total_status_code_df = status_code_count['DF']
-  #     trailer.total_status_code_da = status_code_count['DA']
-  #     trailer.total_status_code_05 = status_code_count['05']
-  #     trailer.total_status_code_11 = status_code_count['11']
-  #     trailer.total_status_code_13 = status_code_count['13']
-  #     trailer.total_status_code_61 = status_code_count['61']
-  #     trailer.total_status_code_62 = status_code_count['62']
-  #     trailer.total_status_code_63 = status_code_count['63']
-  #     trailer.total_status_code_64 = status_code_count['64']
-  #     trailer.total_status_code_65 = status_code_count['65']
-  #     trailer.total_status_code_71 = status_code_count['71']
-  #     trailer.total_status_code_78 = status_code_count['78']
-  #     trailer.total_status_code_80 = status_code_count['80']
-  #     trailer.total_status_code_82 = status_code_count['82']
-  #     trailer.total_status_code_83 = status_code_count['83']
-  #     trailer.total_status_code_84 = status_code_count['84']
-  #     trailer.total_status_code_88 = status_code_count['88']
-  #     trailer.total_status_code_89 = status_code_count['89']
-  #     trailer.total_status_code_93 = status_code_count['93']
-  #     trailer.total_status_code_94 = status_code_count['94']
-  #     trailer.total_status_code_94 = status_code_count['95']
-  #     trailer.total_status_code_96 = status_code_count['96']
-  #     trailer.total_status_code_97 = status_code_count['97']
-  #     trailer.ecoa_code_z = num_ecoa_code_z
-  #     trailer.total_social_security_numbers = num_ssn
-  #     trailer.total_social_security_numbers_in_base = num_ssn
-  #     trailer.total_date_of_births = num_dob
-  #     trailer.total_date_of_births_in_base = num_dob
-  #     trailer.total_telephome_numbers = num_telephone
-  #     trailer
-  #   end
 
-  #  end
+  defp to_metro2(%{} = file) do
+    elements = Enum.filter_map( file.base_segments, &is_map/1, &Segment.to_metro2/1) ++ [Segment.to_metro2(file.tailer)]
+    [Segment.to_metro2(file.header) | elements ]
+  end
 end
