@@ -9,6 +9,11 @@ defmodule Metro2.Mixfile do
      start_permanent: Mix.env == :prod,
      deps: deps(),
      preferred_cli_env: [espec: :test],
+
+     # Docs
+     name: "Metro2",
+     source_url: "https://github.com/dominikknafelj/metro2",
+     maintainers: "Dominik Knafelj"
    ]
   end
 
@@ -32,6 +37,7 @@ defmodule Metro2.Mixfile do
   defp deps do
     [{:timex, "~> 3.0"},
     {:espec, "~> 1.3.0", only: :test},
-    {:credo, "~> 0.7", only: [:dev, :test]}]
+    {:credo, "~> 0.7", only: [:dev, :test]},
+    {:ex_doc, "~> 0.14", only: :dev, runtime: false}]
   end
 end

@@ -1,5 +1,8 @@
 defmodule Metro2.Records.TailerSegment do
-
+    @moduledoc """
+  This module defines the initial struct for a tailer segment. This segment will updated based on the
+  information of the other segments. 
+  """
   alias Metro2.Fields.Alphanumeric
   alias Metro2.Fields.Numeric
   import Metro2.Fields, only: [get: 2, put: 3]
@@ -55,6 +58,8 @@ defmodule Metro2.Records.TailerSegment do
     reserved_2: %Alphanumeric{ required_length: 19, value: nil },
   ]
 
+  # this function increments field in the segment
+  @doc false
   def increment_field(%Metro2.Records.TailerSegment{} = segment, field ) do
     case get(segment, field) do
       x when x == nil -> put(segment, field, 1)
@@ -62,6 +67,7 @@ defmodule Metro2.Records.TailerSegment do
       x -> raise ArgumentError, message: "Field '#{field}' has invalid value #{x}, it has to be an integer!"
     end
   end
-  
+
+  @doc false
   def to_metro2(segment), do: Metro2.Segment.to_metro2(segment)
 end

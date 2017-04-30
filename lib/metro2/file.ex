@@ -1,4 +1,8 @@
 defmodule Metro2.File do
+  @moduledoc """
+  This module defines the initial struct of the the metro2 file struct, further it contains the serialisation method,
+  wich ultimately returns a string containing the struct as valid metro2 file content.
+  """
   alias Metro2.Records.HeaderSegment
   alias Metro2.Records.BaseSegment
   alias Metro2.Records.TailerSegment
@@ -6,14 +10,13 @@ defmodule Metro2.File do
 
   import Metro2.Fields, only: [get: 2]
 
-
-
   defstruct [
     header: %HeaderSegment{},
     base_segments: [],
     tailer: %TailerSegment{}
   ]
 
+  # struct which map the fields from the base segments to the corresponding fields in the tailer segments
   @field_mapping %{
     ecoa_code: :ecoa_code_z,
     social_security_number: :total_social_security_numbers,
@@ -21,11 +24,17 @@ defmodule Metro2.File do
     telephone_number: :total_telephone_numbers
   }
 
+  @doc """
+  Add a base segement to the base segment list in the file struct.
+  """
   def add_base_segment( %Metro2.File{} = file, %BaseSegment{} = segment) do
     list = Map.get(file, :base_segments)
     Map.put(file, :base_segments, [segment | list])
   end
 
+  @doc """
+  converts and serializes a Metro2.File struct into a Metro2 conform string
+  """
   def serialize( %Metro2.File{} = file ) do
      tailer_segment = %TailerSegment{} |> count_base_segment(file.base_segments)
      file 
@@ -35,9 +44,13 @@ defmodule Metro2.File do
      |> Enum.join("\n")
   end
 
-  def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, []), do: tailer_segment
+  @doc false
+  # terminal definition for the base segment counter
+  defp count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, []), do: tailer_segment
 
-  def count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, [head | tail]) do
+  @doc false
+  # recursive counter to update the tailer segment for each base segment.
+  defp count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, [head | tail]) do
     tailer_segment
     |> increment_status_code(head)
     |> conditional_increment( head, :social_security_number)
@@ -47,15 +60,21 @@ defmodule Metro2.File do
     |> count_base_segment(tail)
   end
 
+  @doc false
+  # determines the status code of the base segment and counts the corresponding field in the tailer segment up.
   defp increment_status_code(%TailerSegment{} = tailer, %{} = segment) do
     account_status = get(segment, :account_status) |> account_status_to_s()
     tailer_field = "total_status_code_" <> account_status |> String.downcase |> String.to_atom
     tailer |> TailerSegment.increment_field(tailer_field)
   end
 
+  @doc false
+  # casts possible integer values to sring.
   defp account_status_to_s(status) when is_integer(status), do: Integer.to_string(status)
   defp account_status_to_s(status) when is_binary(status), do: status
 
+  @doc false
+  # counts up the ecoa_code_z field in the tailer segment if the base segment's is z.
   defp conditional_increment(%TailerSegment{} = tailer, %{} = segment, :ecoa_code = field) do
     case get(segment, field) do
       x when x == "z" -> TailerSegment.increment_field(tailer, :ecoa_code_z)
@@ -63,6 +82,8 @@ defmodule Metro2.File do
     end
   end
 
+  @doc false
+  # counts up the field in the tailer segment, if the corresponding value in the base segment is not nil
   defp conditional_increment(%TailerSegment{} = tailer, %{} = segment, field) do
     case get(segment, field) do
       nil -> tailer
@@ -70,7 +91,9 @@ defmodule Metro2.File do
     end
   end
 
-  defp to_metro2(%{} = file) do
+  @doc false
+  # generates a list with every segment in the metro2 file structure
+  defp to_metro2(%Metro2.File{} = file) do
     elements = Enum.filter_map( file.base_segments, &is_map/1, &Segment.to_metro2/1) ++ [Segment.to_metro2(file.tailer)]
     [Segment.to_metro2(file.header) | elements ]
   end

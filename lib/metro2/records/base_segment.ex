@@ -1,4 +1,7 @@
 defmodule Metro2.Records.BaseSegment do
+  @moduledoc """
+  This module defines the initial struct for a base segment.
+  """
   alias Metro2.Fields.Alphanumeric
   alias Metro2.Fields.Numeric
   alias Metro2.Fields.Monetary
@@ -56,5 +59,6 @@ defmodule Metro2.Records.BaseSegment do
     residence_code: %Alphanumeric{ required_length: 1 },
   ]
   
+  @doc false
   def to_metro2(segment), do: Metro2.Segment.to_metro2(segment)
 end

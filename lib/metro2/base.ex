@@ -1,4 +1,10 @@
 defmodule Metro2.Base do
+  @moduledoc """
+  This module contains all the elementar parts of the metro2 generation, like: 
+    * Maps wich translates the humanized states into metro2 conform codes
+    * Regular expressions for valid numerics and alphanumerics
+    * Functions which are converting datatypes in to a metro2 compatible format 
+  """
   @portfolio_type %{
       line_of_credit: "C",
       installment:    "I",
@@ -166,6 +172,7 @@ defmodule Metro2.Base do
   @decimal_seperator "."
   @version_string "01"
 
+
   def portfolio_type, do: @portfolio_type
   def account_type, do: @account_type
   def ecoa_code, do: @ecoa_code
@@ -190,6 +197,9 @@ defmodule Metro2.Base do
   def version_string, do: @version_string
   def decimal_seperator, do: @decimal_seperator
 
+  @doc """
+    function to check if a certain account status needs a payment rating
+  """
   def account_status_needs_payment_rating?(account_status) do
       account_status in [@account_status[:account_transferred], @account_status[:closed],
                           @account_status[:paid_in_full_foreclosure], @account_status[:govt_insurance_claim_filed],
@@ -197,14 +207,20 @@ defmodule Metro2.Base do
                           @account_status[:voluntary_surrender]]
   end
 
+  #converts a nil value to an alphanumeric metro2 format
+  @doc false
   def alphanumeric_to_metro2(nil, required_length, _ ) do
     String.duplicate(" ", required_length)
   end
 
+  #converts a string to an alphanumeric metro2 format
+  @doc false
   def alphanumeric_to_metro2("", required_length, _ ) do
     String.duplicate(" ", required_length)
   end
 
+  #converts a numeral to an alphanumeric metro2 format
+  @doc false
   def alphanumeric_to_metro2(val, required_length, permitted_chars) when is_number(val) do
     case val do
       x when is_float(x) -> Float.to_string(x)
@@ -213,11 +229,14 @@ defmodule Metro2.Base do
     |> alphanumeric_to_metro2(required_length, permitted_chars)
   end
 
+  # converts val into an alphanumeric metro2 format with the required length
+  # it checks if val contains just permitted characters 
+  @doc false
   def alphanumeric_to_metro2(val, required_length, permitted_chars) do
     unless Regex.match?(permitted_chars, val) do
       raise ArgumentError, message: "Content (#{val}) contains invalid characters"
     end
-
+    # if val is too long, just cut it down, else fil it up with leading spaces
     if String.length(val) > required_length do
       String.slice(val, 0..(required_length-1))
     else
@@ -225,15 +244,23 @@ defmodule Metro2.Base do
     end
   end
 
+  # converts a nil value to a numeric metro2 format
+  @doc false
   def numeric_to_metro2( nil , required_length, _) do
     String.duplicate("0", required_length)
   end
 
+  # converts an empty string to a numeric metro2 format
+  @doc false
   def numeric_to_metro2( "" , required_length, _) do
     String.duplicate("0", required_length)
   end
 
-
+  # converts a numeric to a metro2 field.
+  # float will be represented as floored integers
+  # monetaty values will be limited to 999.999.999, higher values will be represented with the same amount
+  # non monetary fields will raise an ArgunmentError for being too long
+  @doc false
   def numeric_to_metro2(val, required_length, is_monetary) do
     case normalize_numeric(val) |> Tuple.append(is_monetary) do
       # when we have a monetary value and we exceed the billion we limit to 999,999,999
@@ -245,6 +272,7 @@ defmodule Metro2.Base do
     end
   end
 
+  @doc false
   defp normalize_numeric(val) when is_binary(val) do
     case Float.parse(val) do
       {x, ""} -> normalize_numeric(x)
@@ -252,12 +280,14 @@ defmodule Metro2.Base do
     end
   end
 
+  # returns the interger numeric value and the figures in a tupel
+  @doc false
   defp normalize_numeric(val) when is_integer(val) do
     {val, (Integer.to_string(val) |> String.length())}
   end
 
+  @doc false
   defp normalize_numeric(val) when is_float(val) do
     val |> Float.floor |> round() |> normalize_numeric()
   end
-
 end

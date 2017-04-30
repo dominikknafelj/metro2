@@ -1,4 +1,7 @@
 defmodule Metro2.Records.HeaderSegment do
+  @moduledoc """
+    This module defines the initial struct for a header segment.
+  """
 
   alias Metro2.Fields.Alphanumeric
   alias Metro2.Fields.Numeric
