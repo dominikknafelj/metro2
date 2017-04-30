@@ -9,11 +9,9 @@ defmodule Metro2.Mixfile do
      start_permanent: Mix.env == :prod,
      deps: deps(),
      preferred_cli_env: [espec: :test],
+     package: package(),
+     description: description()
 
-     # Docs
-     name: "Metro2",
-     source_url: "https://github.com/dominikknafelj/metro2",
-     maintainers: "Dominik Knafelj"
    ]
   end
 
@@ -44,10 +42,16 @@ defmodule Metro2.Mixfile do
   defp package do
     [
       name: :metro2,
-      files: ["lib", "priv", "mix.exs", "README*", "readme*", "LICENSE*", "license*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Dominik Knafelj"],
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/dominikknafelj/metro2"}
     ]
+  end
+
+  defp description do
+    """
+    This library follows the METRO 2 ® data reporting format, which is a data reporting format for consumer credit account data furnishers.
+    """
   end
 end

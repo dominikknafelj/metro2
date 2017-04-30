@@ -1,5 +1,6 @@
 # Metro2
-This library generates Metro2 files for credit reporting.
+This library follows the METRO 2 ® data reporting format, which is a data reporting format for consumer credit account data furnishers.
+
 It contains structs for 
  * header segments
  * base segments
@@ -30,7 +31,7 @@ To access a field value in a segment struct, please use i.E.:
 %Metro2.Records.BaseSegment{}
 |> Metro2.Fields.get(:first_name)
 ```
-### Metro2 File Structure
+### METRO 2® File Structure
 The Metro2 File Structure is the root structure and it has the following inital structure:
 ```elixir
 defstruct [

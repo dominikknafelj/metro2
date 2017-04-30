@@ -20,3 +20,9 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+This library follows the METRO 2 ® data reporting format, which is a data reporting format for consumer credit account data furnishers.
+
+CONSUMER DATA INDUSTRY ASSOCIATION®, CDIA®, the CREDIT REPORTING RESOURCE GUIDE®, and METRO 2® are registered trademarks or trademarks of the Consumer Data Industry Association in the United States and/or other countries.
+Neither Dominik Knafelj nor his products or services are affiliated with or endorse d by the Consumer Data Industry Association or CDIA.
