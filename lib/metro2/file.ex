@@ -57,7 +57,14 @@ defmodule Metro2.File do
     |> conditional_increment( head, :date_of_birth)
     |> conditional_increment( head, :telephone_number)
     |> conditional_increment( head, :ecoa_code)
+    |> increment_total_base_records
     |> count_base_segment(tail)
+  end
+
+  @doc false
+  # counts up the total_base_records field in the tailer
+  defp increment_total_base_records(%TailerSegment{} = tailer) do
+    tailer |> TailerSegment.increment_field(:total_base_records)
   end
 
   @doc false
