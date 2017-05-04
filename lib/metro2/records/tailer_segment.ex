@@ -69,5 +69,5 @@ defmodule Metro2.Records.TailerSegment do
   end
 
   @doc false
-  def to_metro2(segment), do: Metro2.Segment.to_metro2(segment)
+  def to_metro2(segment), do: Segment.to_metro2(segment)
 end
