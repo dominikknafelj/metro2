@@ -40,6 +40,9 @@ defstruct [
     tailer: %TailerSegment{}
   ]
 ```
+
+
+
 This file can be converted into a serialized Metro2 string via:
 
 ```elixir
