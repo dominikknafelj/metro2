@@ -94,9 +94,12 @@ defmodule Metro2.BaseTest do
 
     test "raises ArgumentError when val is too large and is_monetary is false" do
       test_val = 1_000_000_000.78
-      assert_raise ArgumentError, "numeric field (#{test_val}) is too long (max #{@required_length})", fn ->
-        Base.numeric_to_metro2(test_val, @required_length, false)
-      end
+
+      assert_raise ArgumentError,
+                   "numeric field (#{test_val}) is too long (max #{@required_length})",
+                   fn ->
+                     Base.numeric_to_metro2(test_val, @required_length, false)
+                   end
     end
 
     test "returns floored value with leading zeros for valid numeric" do
@@ -105,4 +108,4 @@ defmodule Metro2.BaseTest do
       assert result == "000000034"
     end
   end
-end 
+end

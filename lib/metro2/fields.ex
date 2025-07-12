@@ -1,5 +1,6 @@
 defmodule Metro2.Fields do
   use Timex
+
   @moduledoc """
   This module defines all the field structs, which can be part of the segments.
   Further it contains methods to get or set values in the field stucts, which are abracting the access to the diskrete values.
@@ -12,10 +13,12 @@ defmodule Metro2.Fields do
     @doc false
     def to_metro2(field) do
       # Get the appropriate permitted_chars pattern
-      permitted_chars = case field.permitted_chars do
-        nil -> Metro2.Base.alphanumeric()
-        pattern -> pattern
-      end
+      permitted_chars =
+        case field.permitted_chars do
+          nil -> Metro2.Base.alphanumeric()
+          pattern -> pattern
+        end
+
       Metro2.Base.alphanumeric_to_metro2(field.value, field.required_length, permitted_chars)
     end
 
@@ -140,10 +143,16 @@ defmodule Metro2.Fields do
   This function sets a new value in the field_struct in the segment struct, addressed by the parent_struct key
   """
   def put(%{} = parent_struct, parent_struct_key, value) do
-    field = case Map.get(parent_struct, parent_struct_key) do
-              x when is_map(x) -> Map.put(x, :value, value)
-              _ -> raise ArgumentError, message: "Field #{parent_struct_key} couldn't be found or is not a map." 
-            end
+    field =
+      case Map.get(parent_struct, parent_struct_key) do
+        x when is_map(x) ->
+          Map.put(x, :value, value)
+
+        _ ->
+          raise ArgumentError,
+            message: "Field #{parent_struct_key} couldn't be found or is not a map."
+      end
+
     Map.put(parent_struct, parent_struct_key, field)
   end
 
@@ -152,15 +161,18 @@ defmodule Metro2.Fields do
   """
   def get(%{} = parent_struct, parent_struct_key) do
     case Map.get(parent_struct, parent_struct_key) do
-      x when is_map(x) -> Map.get(x, :value)
-      _ -> raise ArgumentError, message: "Field #{parent_struct_key} couldn't be found or is not a map." 
+      x when is_map(x) ->
+        Map.get(x, :value)
+
+      _ ->
+        raise ArgumentError,
+          message: "Field #{parent_struct_key} couldn't be found or is not a map."
     end
   end
 
   @doc false
   # this function calls the to_metro2 method of the corresponding Module of the field struct
-  def to_metro2(%{} = field_struct ) do
-    field_struct.__struct__
-    |> apply(:to_metro2, [field_struct])
+  def to_metro2(%{} = field_struct) do
+    field_struct.__struct__.to_metro2(field_struct)
   end
 end

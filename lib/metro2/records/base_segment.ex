@@ -3,10 +3,10 @@ defmodule Metro2.Records.BaseSegment do
   This module defines the initial struct for a base segment.
   """
   alias Metro2.Fields.Alphanumeric
-  alias Metro2.Fields.Numeric
-  alias Metro2.Fields.Monetary
-  alias Metro2.Fields.TimeStamp
   alias Metro2.Fields.Date
+  alias Metro2.Fields.Monetary
+  alias Metro2.Fields.Numeric
+  alias Metro2.Fields.TimeStamp
 
   defstruct [
     :record_descriptor_word,
@@ -56,7 +56,7 @@ defmodule Metro2.Records.BaseSegment do
     :state,
     :postal_code,
     :address_indicator,
-    :residence_code,
+    :residence_code
   ]
 
   @doc """
@@ -65,7 +65,8 @@ defmodule Metro2.Records.BaseSegment do
   def new do
     %__MODULE__{
       record_descriptor_word: Numeric.new(4, Metro2.Base.fixed_length()),
-      processing_indicator: Alphanumeric.new(1, 1), # always 1
+      # always 1
+      processing_indicator: Alphanumeric.new(1, 1),
       time_stamp: TimeStamp.new(),
       correction_indicator: Numeric.new(1),
       identification_number: Alphanumeric.new(20),
@@ -93,7 +94,8 @@ defmodule Metro2.Records.BaseSegment do
       closed_date: Date.new(),
       last_payment_date: Date.new(),
       interest_type_indicator: Alphanumeric.new(1),
-      reserved: Alphanumeric.new(16, nil), # blank fill
+      # blank fill
+      reserved: Alphanumeric.new(16, nil),
       consumer_transaction_type: Alphanumeric.new(1),
       surname: Alphanumeric.new_with_dash(25),
       first_name: Alphanumeric.new_with_dash(20),
@@ -111,10 +113,10 @@ defmodule Metro2.Records.BaseSegment do
       state: Alphanumeric.new(2),
       postal_code: Alphanumeric.new(9),
       address_indicator: Alphanumeric.new(1),
-      residence_code: Alphanumeric.new(1),
+      residence_code: Alphanumeric.new(1)
     }
   end
-  
+
   @doc false
   def to_metro2(segment), do: Metro2.Segment.to_metro2(segment)
 end

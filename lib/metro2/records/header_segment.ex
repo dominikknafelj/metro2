@@ -4,8 +4,8 @@ defmodule Metro2.Records.HeaderSegment do
   """
 
   alias Metro2.Fields.Alphanumeric
-  alias Metro2.Fields.Numeric
   alias Metro2.Fields.Date
+  alias Metro2.Fields.Numeric
 
   defstruct [
     :record_descriptor_word,
@@ -25,7 +25,7 @@ defmodule Metro2.Records.HeaderSegment do
     :software_vendor_name,
     :software_version_number,
     :reserved
-   ]
+  ]
 
   @doc """
   Creates a new HeaderSegment with properly initialized fields
@@ -51,6 +51,6 @@ defmodule Metro2.Records.HeaderSegment do
       reserved: Alphanumeric.new(156, nil)
     }
   end
-  
+
   def to_metro2(segment), do: Metro2.Segment.to_metro2(segment)
 end

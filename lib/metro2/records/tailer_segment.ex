@@ -1,5 +1,5 @@
 defmodule Metro2.Records.TailerSegment do
-    @moduledoc """
+  @moduledoc """
   This module defines the initial struct for a tailer segment. This segment will updated based on the
   information of the other segments. 
   """
@@ -55,7 +55,7 @@ defmodule Metro2.Records.TailerSegment do
     :total_date_of_births_in_j1,
     :total_date_of_births_in_j2,
     :total_telephone_numbers,
-    :reserved_2,
+    :reserved_2
   ]
 
   @doc """
@@ -109,17 +109,23 @@ defmodule Metro2.Records.TailerSegment do
       total_date_of_births_in_j1: Numeric.new(9, 0),
       total_date_of_births_in_j2: Numeric.new(9, 0),
       total_telephone_numbers: Numeric.new(9, 0),
-      reserved_2: Alphanumeric.new(19, nil),
+      reserved_2: Alphanumeric.new(19, nil)
     }
   end
 
   # this function increments field in the segment
   @doc false
-  def increment_field(%Metro2.Records.TailerSegment{} = segment, field ) do
+  def increment_field(%Metro2.Records.TailerSegment{} = segment, field) do
     case get(segment, field) do
-      x when x == nil -> put(segment, field, 1)
-      x when is_integer(x) -> put(segment, field, x+1)
-      x -> raise ArgumentError, message: "Field '#{field}' has invalid value #{x}, it has to be an integer!"
+      x when x == nil ->
+        put(segment, field, 1)
+
+      x when is_integer(x) ->
+        put(segment, field, x + 1)
+
+      x ->
+        raise ArgumentError,
+          message: "Field '#{field}' has invalid value #{x}, it has to be an integer!"
     end
   end
 
