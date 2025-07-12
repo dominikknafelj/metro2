@@ -7,11 +7,49 @@ defmodule Metro2.Fields do
   defmodule Alphanumeric do
     @moduledoc false
     # this module defines the alphanumeric field struct
-    defstruct [:value, :required_length, permitted_chars: Metro2.Base.alphanumeric]
+    defstruct [:value, :required_length, :permitted_chars]
 
     @doc false
     def to_metro2(field) do
-      Metro2.Base.alphanumeric_to_metro2(field.value, field.required_length, field.permitted_chars)
+      # Get the appropriate permitted_chars pattern
+      permitted_chars = case field.permitted_chars do
+        nil -> Metro2.Base.alphanumeric()
+        pattern -> pattern
+      end
+      Metro2.Base.alphanumeric_to_metro2(field.value, field.required_length, permitted_chars)
+    end
+
+    @doc """
+    Creates an alphanumeric field with standard alphanumeric characters only
+    """
+    def new(required_length, value \\ nil) do
+      %__MODULE__{
+        value: value,
+        required_length: required_length,
+        permitted_chars: Metro2.Base.alphanumeric()
+      }
+    end
+
+    @doc """
+    Creates an alphanumeric field that allows alphanumeric characters plus dashes
+    """
+    def new_with_dash(required_length, value \\ nil) do
+      %__MODULE__{
+        value: value,
+        required_length: required_length,
+        permitted_chars: Metro2.Base.alphanumeric_plus_dash()
+      }
+    end
+
+    @doc """
+    Creates an alphanumeric field that allows alphanumeric characters plus dots, dashes, and slashes
+    """
+    def new_with_dot_dash_slash(required_length, value \\ nil) do
+      %__MODULE__{
+        value: value,
+        required_length: required_length,
+        permitted_chars: Metro2.Base.alphanumeric_plus_dot_dash_slash()
+      }
     end
   end
 
@@ -24,6 +62,16 @@ defmodule Metro2.Fields do
     def to_metro2(field) do
       Metro2.Base.numeric_to_metro2(field.value, field.required_length, false)
     end
+
+    @doc """
+    Creates a numeric field
+    """
+    def new(required_length, value \\ nil) do
+      %__MODULE__{
+        value: value,
+        required_length: required_length
+      }
+    end
   end
 
   defmodule Monetary do
@@ -34,6 +82,13 @@ defmodule Metro2.Fields do
     @doc false
     def to_metro2(field) do
       Metro2.Base.numeric_to_metro2(field.value, 9, true)
+    end
+
+    @doc """
+    Creates a monetary field
+    """
+    def new(value \\ nil) do
+      %__MODULE__{value: value}
     end
   end
 
@@ -50,6 +105,13 @@ defmodule Metro2.Fields do
       end
       |> Metro2.Base.numeric_to_metro2(8, false)
     end
+
+    @doc """
+    Creates a date field
+    """
+    def new(value \\ nil) do
+      %__MODULE__{value: value}
+    end
   end
 
   defmodule TimeStamp do
@@ -64,6 +126,13 @@ defmodule Metro2.Fields do
         _ -> Timex.format!(field.value, "%m%d%Y%H%M%S", :strftime)
       end
       |> Metro2.Base.numeric_to_metro2(14, false)
+    end
+
+    @doc """
+    Creates a timestamp field
+    """
+    def new(value \\ nil) do
+      %__MODULE__{value: value}
     end
   end
 

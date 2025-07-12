@@ -169,7 +169,7 @@ defmodule Metro2.Base do
   @numeric                           ~r/\A\d+\.?\d*\z/
   @integer                           ~r/\d+\z/
   @fixed_length 426
-  @decimal_seperator "."
+  @decimal_separator "."
   @version_string "01"
 
 
@@ -195,7 +195,7 @@ defmodule Metro2.Base do
   def integer, do: @integer
   def fixed_length, do: @fixed_length
   def version_string, do: @version_string
-  def decimal_seperator, do: @decimal_seperator
+  def decimal_separator, do: @decimal_separator
 
   @doc """
     function to check if a certain account status needs a payment rating
@@ -262,7 +262,7 @@ defmodule Metro2.Base do
   # non monetary fields will raise an ArgunmentError for being too long
   @doc false
   def numeric_to_metro2(val, required_length, is_monetary) do
-    case normalize_numeric(val) |> Tuple.append(is_monetary) do
+    case normalize_numeric(val) |> Tuple.insert_at(2, is_monetary) do
       # when we have a monetary value and we exceed the billion we limit to 999,999,999
       {x, _,  true} when  x >= 1_000_000_000 -> String.duplicate("9", required_length)
       # normal case, we return the value with leading 0 as fillup

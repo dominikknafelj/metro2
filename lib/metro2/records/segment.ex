@@ -7,6 +7,9 @@ defmodule Metro2.Segment do
   @doc false
   # this function returns a list of the metro2 converted fields of the segment
   def to_metro2(%{}= segment) do
-    segment |> Map.values |> Enum.filter_map( &is_map/1, &Fields.to_metro2/1)
+    segment 
+    |> Map.values 
+    |> Enum.filter(&is_map/1)
+    |> Enum.map(&Fields.to_metro2/1)
   end
 end

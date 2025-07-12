@@ -11,10 +11,21 @@ defmodule Metro2.File do
   import Metro2.Fields, only: [get: 2]
 
   defstruct [
-    header: %HeaderSegment{},
-    base_segments: [],
-    tailer: %TailerSegment{}
+    :header,
+    :base_segments,
+    :tailer
   ]
+
+  @doc """
+  Creates a new Metro2 File with properly initialized segments
+  """
+  def new do
+    %__MODULE__{
+      header: HeaderSegment.new(),
+      base_segments: [],
+      tailer: TailerSegment.new()
+    }
+  end
 
   # struct which map the fields from the base segments to the corresponding fields in the tailer segments
   @field_mapping %{
@@ -36,7 +47,7 @@ defmodule Metro2.File do
   converts and serializes a Metro2.File struct into a Metro2 conform string
   """
   def serialize( %Metro2.File{} = file ) do
-     tailer_segment = %TailerSegment{} |> count_base_segment(file.base_segments)
+     tailer_segment = TailerSegment.new() |> count_base_segment(file.base_segments)
      file 
      |> Map.put(:tailer, tailer_segment) 
      |> to_metro2
@@ -76,7 +87,8 @@ defmodule Metro2.File do
   end
 
   @doc false
-  # casts possible integer values to sring.
+  # casts possible integer values to string.
+  defp account_status_to_s(nil), do: "11"  # default to current status when nil
   defp account_status_to_s(status) when is_integer(status), do: Integer.to_string(status)
   defp account_status_to_s(status) when is_binary(status), do: status
 
@@ -101,7 +113,11 @@ defmodule Metro2.File do
   @doc false
   # generates a list with every segment in the metro2 file structure
   defp to_metro2(%Metro2.File{} = file) do
-    elements = Enum.filter_map( file.base_segments, &is_map/1, &Segment.to_metro2/1) ++ [Segment.to_metro2(file.tailer)]
-    [Segment.to_metro2(file.header) | elements ]
+    elements = 
+      file.base_segments
+      |> Enum.filter(&is_map/1)
+      |> Enum.map(&Segment.to_metro2/1)
+    
+    [Segment.to_metro2(file.header) | elements] ++ [Segment.to_metro2(file.tailer)]
   end
 end

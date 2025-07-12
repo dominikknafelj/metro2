@@ -12,7 +12,7 @@ It contains structs for
 
 ```elixir
 def deps do
-  [{:metro_2, "~> 0.1.0"}]
+  [{:metro_2, "~> 0.2.0"}]
 end
 ```
 
