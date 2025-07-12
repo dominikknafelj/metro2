@@ -21,3 +21,7 @@ erl_crash.dump
 
 # Ignore IDE meta files
 /.idea
+
+# Ignore demo output files
+demo_output.metro2
+*.metro2
