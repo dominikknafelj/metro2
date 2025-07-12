@@ -2,25 +2,25 @@ defmodule Metro2.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :metro_2,
-     version: "0.1.1",
-     elixir: "~> 1.4",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps(),
-     preferred_cli_env: [espec: :test],
-     package: package(),
-     description: description()
-
-   ]
+    [
+      app: :metro_2,
+      version: "0.2.0",
+      elixir: "~> 1.14",
+      start_permanent: Mix.env() == :prod,
+      deps: deps(),
+      package: package(),
+      description: description(),
+      docs: docs()
+    ]
   end
 
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
   def application do
-    # Specify extra applications you'll use from Erlang/Elixir
-    [applications: [:timex], extra_applications: [:logger]]
+    [
+      extra_applications: [:logger]
+    ]
   end
 
   # Dependencies can be Hex packages:
@@ -33,10 +33,11 @@ defmodule Metro2.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:timex, "~> 3.0"},
-    {:espec, "~> 1.3.0", only: :test},
-    {:credo, "~> 0.7", only: [:dev, :test]},
-    {:ex_doc, "~> 0.14", only: :dev, runtime: false}]
+    [
+      {:timex, "~> 3.7"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false}
+    ]
   end
 
   defp package do
@@ -53,5 +54,12 @@ defmodule Metro2.Mixfile do
     """
     This library follows the METRO 2 ® data reporting format, which is a data reporting format for consumer credit account data furnishers.
     """
+  end
+
+  defp docs do
+    [
+      main: "Metro2",
+      extras: ["README.md"]
+    ]
   end
 end

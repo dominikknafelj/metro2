@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  push:
+    branches: [ master, main ]
+
+env:
+  MIX_ENV: test
+
+jobs:
+  test:
+    name: Test (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir: '1.14'
+            otp: '25'
+          - elixir: '1.15'
+            otp: '26'
+          - elixir: '1.16'
+            otp: '26'
+          - elixir: '1.17'
+            otp: '27'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Restore compiled code cache
+        uses: actions/cache@v3
+        with:
+          path: _build
+          key: ${{ runner.os }}-build-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ matrix.elixir }}-${{ matrix.otp }}-
+            ${{ runner.os }}-build-${{ matrix.elixir }}-
+            ${{ runner.os }}-build-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile code (warnings as errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Run tests
+        run: mix test --trace
+
+      - name: Run demo (smoke test)
+        run: mix run demo.exs
+        if: matrix.elixir == '1.17' && matrix.otp == '27'
+
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    env:
+      MIX_ENV: dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.17'
+          otp-version: '27'
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Restore compiled code cache
+        uses: actions/cache@v3
+        with:
+          path: _build
+          key: ${{ runner.os }}-build-quality-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-quality-
+            ${{ runner.os }}-build-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check code formatting
+        run: mix format --check-formatted
+
+      - name: Run Credo (code analysis)
+        run: mix credo --strict
+
+      - name: Check for unused dependencies
+        run: mix deps.unlock --check-unused
+
+  # Additional quality checks can be added here in the future
+  # such as security scanning, documentation generation, etc. 
