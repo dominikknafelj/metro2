@@ -55,14 +55,10 @@ base_segment = Metro2.Fields.put(base_segment, :address_1, "123 Main St./Apt 2")
 first_name = Metro2.Fields.get(base_segment, :first_name)
 ```
 ### METRO 2® File Structure
-The Metro2 File Structure is the root structure and it has the following initial structure:
-```elixir
-defstruct [
-    header: %HeaderSegment{},
-    base_segments: [],
-    tailer: %TailerSegment{}
-  ]
-```
+`Metro2.File` is the root structure: a header, a list of base segments and a tailer.
+Always create it with `Metro2.File.new()` (and segments with their `new/0`), which
+initializes every field definition; bare `%Metro2.File{}` or `%HeaderSegment{}` structs
+can't be serialized.
 
 Create and serialize a Metro2 file:
 
@@ -75,17 +71,18 @@ my_file = %{my_file | header: Metro2.Fields.put(my_file.header, :reporter_name, 
 
 # Add base segments
 base_segment = Metro2.Records.BaseSegment.new()
+|> Metro2.Fields.put(:account_status, :current)  # required
 |> Metro2.Fields.put(:surname, "Smith-Johnson")
 |> Metro2.Fields.put(:first_name, "John")
 
 my_file = Metro2.File.add_base_segment(my_file, base_segment)
 
-# Serialize to METRO 2® format
+# Serialize to METRO 2® format (raises Metro2.ValidationError listing every invalid field)
 metro2_content = Metro2.File.serialize(my_file)
 ```
 ### Header Segment
-The header segment contains information about the data furnisher.
-You should simply transform the header segment structure in the file structure.
+The header segment contains information about the data furnisher. Update it in place with
+`Metro2.Fields.put/3`, as in the example above.
 
 ### Base Segment
 The base segment is stored in a list in the Metro2.File structure. Each base segment represents one reportable loan.
@@ -157,4 +154,4 @@ All text is upper cased and accented letters are transliterated (`José` → `JO
 ### Limitations
 - Only the 426-character format is supported, not the 366-byte packed format.
 - `Metro2.Rules` covers a subset of the CRRG consistency rules; the unconfirmed ones are warnings.
-- Humanized atom maps for `account_type`, `special_comment` and `consumer_information_indicator` are partial; any code of valid characters is accepted for these.
+- Humanized atom maps for `account_type`, `special_comment` and `consumer_information_indicator` are partial; use the codes directly where no atom exists. `account_type` and `special_comment` only accept codes from the METRO 2 lists (`Metro2.Base.valid_codes/1`); `consumer_information_indicator` accepts any code of valid characters.
