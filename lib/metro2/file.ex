@@ -42,7 +42,7 @@ defmodule Metro2.File do
 
   @doc """
   Validates every field of the header and base segments (including appended segments) and
-  the cross-field rules of `Metro2.Rules`.
+  the cross-field error rules of `Metro2.Rules`. Use `warnings/1` for the warning rules.
 
   Returns `:ok` or `{:error, errors}` with all errors; see `Metro2.ValidationError` for
   their shape.
@@ -60,6 +60,22 @@ defmodule Metro2.File do
       [] -> :ok
       errors -> {:error, errors}
     end
+  end
+
+  @doc ~S"""
+  Returns warnings for data that is likely wrong but not invalid (see `Metro2.Rules`), in
+  the same shape as validation errors. Warnings never fail `serialize/1` or `stream/2`.
+
+      for w <- Metro2.File.warnings(file), do: Logger.warning("#{inspect(w.record)} #{w.field}: #{w.message}")
+  """
+  def warnings(%Metro2.File{} = file) do
+    file.base_segments
+    |> Enum.reverse()
+    |> Enum.with_index(1)
+    |> Enum.flat_map(fn {base, index} ->
+      for {field, message} <- Rules.base_warnings(base),
+          do: %{record: {:base, index}, segment: :base, field: field, message: message}
+    end)
   end
 
   @doc """

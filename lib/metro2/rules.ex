@@ -1,17 +1,23 @@
 defmodule Metro2.Rules do
   @moduledoc """
-  Cross-field consistency rules for base segments, checked by `Metro2.File.validate/1`.
+  Cross-field consistency rules for base segments.
 
-  This is a subset of the rules in the Credit Reporting Resource Guide (CRRG):
+  **Errors** (`base_errors/1`) are checked by `Metro2.File.validate/1` and fail
+  serialization. They are confirmed by the moov-io/metro2 implementation:
 
     * `account_status` is required
     * statuses 05, 13, 65, 88, 89, 94 and 95 require a `payment_rating`; other statuses
       must leave it blank
-    * delinquent statuses (71-84, 93, 97) require a `first_delinquency_date`
-    * status 11 (current) must not report an `amount_past_due`
-    * past-due statuses (71-84) must report an `amount_past_due`
-    * paid or closed statuses (13, 61-65) must report a zero `current_balance`
-    * `payment_history_profile` may only contain payment history codes
+    * `payment_history_profile` may only contain payment history codes (or blanks)
+
+  **Warnings** (`base_warnings/1`) are reported by `Metro2.File.warnings/1` and never fail
+  serialization. They are likely data problems, but could not be confirmed against the
+  CRRG, so a bureau may accept files that violate them:
+
+    * delinquent statuses (71-84, 93, 97) should report a `first_delinquency_date`
+    * status 11 (current) should not report an `amount_past_due`
+    * past-due statuses (71-84) should report an `amount_past_due`
+    * paid or closed statuses (13, 61-65) should report a zero `current_balance`
   """
   alias Metro2.Base
   alias Metro2.Segment
@@ -24,7 +30,7 @@ defmodule Metro2.Rules do
   @history_chars @history_codes <> " "
 
   @doc """
-  Returns `[{field, message}]` for every rule the base segment violates.
+  Returns `[{field, message}]` for every error rule the base segment violates.
   """
   def base_errors(base) do
     status = Segment.value(base, :account_status)
@@ -37,19 +43,33 @@ defmodule Metro2.Rules do
       {:payment_rating, "must be blank for account status #{status}",
        status != nil and not Base.account_status_needs_payment_rating?(status) and
          Segment.value(base, :payment_rating) != nil},
-      {:first_delinquency_date, "is required for account status #{status}",
-       status in @delinquent and not Segment.present?(base, :first_delinquency_date)},
-      {:amount_past_due, "must be 0 for account status 11 (current)",
-       status == "11" and Segment.present?(base, :amount_past_due)},
-      {:amount_past_due, "must be greater than 0 for account status #{status}",
-       status in @past_due and not Segment.present?(base, :amount_past_due)},
-      {:current_balance, "must be 0 for account status #{status}",
-       status in @paid_or_closed and Segment.present?(base, :current_balance)},
       {:payment_history_profile, "may only contain the codes #{@history_codes}",
        invalid_history?(Segment.value(base, :payment_history_profile))}
     ]
-    |> Enum.filter(fn {_, _, violated?} -> violated? end)
-    |> Enum.map(fn {field, message, _} -> {field, message} end)
+    |> violations()
+  end
+
+  @doc """
+  Returns `[{field, message}]` for every warning rule the base segment violates.
+  """
+  def base_warnings(base) do
+    status = Segment.value(base, :account_status)
+
+    [
+      {:first_delinquency_date, "is expected for account status #{status}",
+       status in @delinquent and not Segment.present?(base, :first_delinquency_date)},
+      {:amount_past_due, "is expected to be 0 for account status 11 (current)",
+       status == "11" and Segment.present?(base, :amount_past_due)},
+      {:amount_past_due, "is expected to be greater than 0 for account status #{status}",
+       status in @past_due and not Segment.present?(base, :amount_past_due)},
+      {:current_balance, "is expected to be 0 for account status #{status}",
+       status in @paid_or_closed and Segment.present?(base, :current_balance)}
+    ]
+    |> violations()
+  end
+
+  defp violations(checks) do
+    for {field, message, true} <- checks, do: {field, message}
   end
 
   # blank, as opposed to invalid (which is reported as a field error)

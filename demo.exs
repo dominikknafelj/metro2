@@ -68,7 +68,7 @@ account2 =
   |> Fields.put(:account_status, "71") # 30-59 days past due
   |> Fields.put(:current_balance, 8500)
   |> Fields.put(:amount_past_due, 250)
-  |> Fields.put(:first_delinquency_date, ~D[2025-06-15]) # required for delinquent statuses
+  |> Fields.put(:first_delinquency_date, ~D[2025-06-15]) # expected for delinquent statuses
   |> Fields.put(:scheduled_monthly_payment_amount, 200)
   |> Fields.put(:actual_payment_amount, 0)
   # Consumer information
@@ -160,6 +160,12 @@ end
 IO.puts("\n📤 Generating Metro2 format file...")
 metro2_content = File.serialize(file)
 
+# Warnings flag likely data problems without blocking the file
+case File.warnings(file) do
+  [] -> IO.puts("✅ No warnings")
+  warnings -> Enum.each(warnings, &IO.puts("⚠️  #{inspect(&1.record)} #{&1.field} #{&1.message}"))
+end
+
 # Analysis
 lines = String.split(metro2_content, "\n")
 IO.puts("✅ Generated Metro2 file with #{length(lines)} lines")
@@ -204,7 +210,7 @@ IO.puts("   • Compliant METRO 2® format output")
 IO.puts("   • Name fields supporting dashes (Smith-Johnson)")
 IO.puts("   • Address fields supporting dots/dashes/slashes")
 IO.puts("   • Proper rejection of invalid values")
-IO.puts("   • Cross-field validation (e.g. delinquency date for past-due accounts)")
+IO.puts("   • Cross-field validation (e.g. payment rating for closed accounts)")
 IO.puts("   • Modern Elixir #{System.version()}")
 IO.puts("\n📁 Output file: demo_output.metro2")
 IO.puts("🔍 Use 'cat demo_output.metro2' to view the generated Metro2 content") 

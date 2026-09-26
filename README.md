@@ -129,7 +129,7 @@ base_segment = BaseSegment.add_segment(base_segment, j1)
 J1 and J2 segments accumulate; K1–K4, L1 and N1 occur at most once. The record descriptor word reflects the total record length, and the tailer counts the appended segments.
 
 ### Validation
-`Metro2.File.validate/1` returns `:ok` or `{:error, errors}` with **every** invalid field (character rules, code lists, lengths) and cross-field rule violation (see `Metro2.Rules`), each tagged with its record. `Metro2.File.serialize/1` raises `Metro2.ValidationError` listing them. To validate while setting a single value, use `Metro2.Fields.cast/3`.
+`Metro2.File.validate/1` returns `:ok` or `{:error, errors}` with **every** invalid field (character rules, code lists, lengths) and cross-field rule violation (see `Metro2.Rules`), each tagged with its record. `Metro2.File.serialize/1` raises `Metro2.ValidationError` listing them. Rules that couldn't be confirmed against the CRRG (delinquency date, amount past due, balance on closed accounts) are reported by `Metro2.File.warnings/1` instead and never block serialization. To validate while setting a single value, use `Metro2.Fields.cast/3`.
 
 ### Streaming Large Files
 `Metro2.File.stream/2` serializes lazily, so millions of accounts never need to be in memory at once:
@@ -156,5 +156,5 @@ All text is upper cased and accented letters are transliterated (`José` → `JO
 
 ### Limitations
 - Only the 426-character format is supported, not the 366-byte packed format.
-- `Metro2.Rules` covers a subset of the CRRG consistency rules.
+- `Metro2.Rules` covers a subset of the CRRG consistency rules; the unconfirmed ones are warnings.
 - Humanized atom maps for `account_type`, `special_comment` and `consumer_information_indicator` are partial; any code of valid characters is accepted for these.

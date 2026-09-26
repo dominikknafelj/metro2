@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Closed code lists for account type, special comment, K1 creditor classification, K2 purchased/sold indicator, K3 agency identifier, K4 specialized payment indicator and L1 change indicator, with humanized atoms
 - Payment rating must be blank for account statuses that don't use it
 - `Metro2.File.validate/1` collecting every invalid field and cross-field rule violation; `serialize/1` raises `Metro2.ValidationError` listing all of them
-- `Metro2.Rules` cross-field consistency rules
+- `Metro2.Rules` cross-field consistency rules: confirmed rules are errors; unconfirmed ones (delinquency date, amount past due, balance on closed accounts) are warnings reported by `Metro2.File.warnings/1`
 - `Metro2.Fields.cast/3` to validate while setting a value
 - `Metro2.File.stream/2` for lazy serialization of large files
 - `Metro2.Parser` to parse 426-character METRO 2 content
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Header `activity_date` and `created_date` default to today
 
 ### Changed
-- **BREAKING**: `serialize/1` raises `Metro2.ValidationError` instead of `ArgumentError` and applies the cross-field rules
+- **BREAKING**: `serialize/1` raises `Metro2.ValidationError` instead of `ArgumentError` and applies the cross-field error rules
 - **BREAKING**: header field `program_revisition_date` renamed to `program_revision_date`
 - **BREAKING**: alphanumeric output is upper cased
 - **BREAKING**: `account_type` and `special_comment` only accept codes from the METRO 2 lists

@@ -66,7 +66,7 @@ consumer's identity and address. Most reporting work is filling base segments.
 | `account_status` | Current state of the account; see the table below. Required |
 | `payment_rating` | How the account stood when it was closed/transferred; required for statuses 05, 13, 65, 88, 89, 94, 95 and blank for all others |
 | `payment_history_profile` | 24 characters, most recent month first, one code per month (`0` current, `1`–`6` 30–180+ days late, `B` no history before, `D` no history available, `E` zero balance, `Z` too new to rate, blank for no history, ...) |
-| `first_delinquency_date` | FCRA date of first delinquency; required for delinquent statuses (71–84, 93, 97) |
+| `first_delinquency_date` | FCRA date of first delinquency; expected for delinquent statuses (71–84, 93, 97) — a warning if missing |
 | `special_comment` | Special comment code (e.g. `"AC"` partial payment agreement); must be one of `Metro2.Base.valid_codes(:special_comment)` |
 | `compliance_condition_code` | Dispute status (`XA`–`XJ`, `XR` to remove) |
 

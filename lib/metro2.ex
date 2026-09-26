@@ -44,6 +44,11 @@ defmodule Metro2 do
   def validate(file), do: File.validate(file)
 
   @doc """
+  Returns warnings for likely data problems. See `Metro2.File.warnings/1`.
+  """
+  def warnings(file), do: File.warnings(file)
+
+  @doc """
   Serializes a Metro2 file to the METRO 2® format string.
   """
   def serialize(file), do: File.serialize(file)

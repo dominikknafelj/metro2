@@ -98,9 +98,10 @@ closed code list is an error.
 
 ## 3. Common account scenarios
 
-These cover the cross-field rules the library checks (see `Metro2.Rules`).
+These follow the cross-field rules in `Metro2.Rules`. Payment rating rules are errors;
+the balance, amount past due and delinquency date rules are warnings (see step 4).
 
-**Past due** — needs an amount past due and the date of first delinquency:
+**Past due** — should report an amount past due and the date of first delinquency:
 
 ```elixir
 past_due =
@@ -172,8 +173,8 @@ renumbered =
 
 ## 4. Validate
 
-`Metro2.File.validate/1` checks every field of every record plus the cross-field rules, and
-returns all problems at once:
+`Metro2.File.validate/1` checks every field of every record plus the cross-field error
+rules, and returns all problems at once:
 
 ```elixir
 case Metro2.File.validate(file) do
@@ -188,7 +189,19 @@ end
 ```
 
 `record` is `:header` or `{:base, n}` (1-based, in the order accounts were added), so you
-can map errors back to your source rows. To check one value as you set it, use
+can map errors back to your source rows.
+
+Some rules couldn't be confirmed against the CRRG, so they are **warnings** instead: likely
+data problems that never block serialization. For example: a past-due account without a
+first delinquency date, or a closed account with a balance. Review them with
+`Metro2.File.warnings/1`, which returns the same map shape:
+
+```elixir
+for %{record: record, field: field, message: message} <- Metro2.File.warnings(file) do
+  IO.puts("warning: #{inspect(record)} #{field} #{message}")
+end
+```
+ To check one value as you set it, use
 `Metro2.Fields.cast/3`:
 
 ```elixir

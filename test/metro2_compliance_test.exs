@@ -185,14 +185,10 @@ defmodule Metro2.ComplianceTest do
       refute Enum.any?(errors, &(&1.record == {:base, 1}))
     end
 
-    test "checks cross-field rules" do
+    test "checks cross-field error rules" do
       cases = [
         {[account_status: nil], :account_status},
         {[account_status: "13"], :payment_rating},
-        {[account_status: "71", amount_past_due: 100], :first_delinquency_date},
-        {[account_status: "71", first_delinquency_date: ~D[2024-01-01]], :amount_past_due},
-        {[amount_past_due: 100], :amount_past_due},
-        {[account_status: "13", payment_rating: "0", current_balance: 10], :current_balance},
         {[payment_history_profile: "000000000000000000000009"], :payment_history_profile}
       ]
 
@@ -201,6 +197,26 @@ defmodule Metro2.ComplianceTest do
         assert {:error, errors} = File.validate(file), inspect(overrides)
         assert Enum.any?(errors, &(&1.field == field)), inspect({overrides, errors})
       end
+    end
+
+    test "unconfirmed cross-field rules are warnings that don't fail serialization" do
+      cases = [
+        {[account_status: "71", amount_past_due: 100], :first_delinquency_date},
+        {[account_status: "71", first_delinquency_date: ~D[2024-01-01]], :amount_past_due},
+        {[amount_past_due: 100], :amount_past_due},
+        {[account_status: "13", payment_rating: "0", current_balance: 10], :current_balance}
+      ]
+
+      for {overrides, field} <- cases do
+        file = File.add_base_segment(File.new(), current_account(overrides))
+        assert File.validate(file) == :ok, inspect(overrides)
+        assert is_binary(File.serialize(file))
+
+        assert [%{record: {:base, 1}, segment: :base, field: ^field}] = File.warnings(file),
+               inspect(overrides)
+      end
+
+      assert File.warnings(File.add_base_segment(File.new(), current_account())) == []
     end
 
     test "validates appended segments" do
