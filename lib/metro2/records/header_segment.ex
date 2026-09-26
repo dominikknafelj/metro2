@@ -1,13 +1,15 @@
 defmodule Metro2.Records.HeaderSegment do
   @moduledoc """
     This module defines the initial struct for a header segment.
+    `activity_date` and `created_date` default to the current date when serialized unset.
   """
 
   alias Metro2.Fields.Alphanumeric
   alias Metro2.Fields.Date
   alias Metro2.Fields.Numeric
 
-  defstruct [
+  # Declaration order is the METRO 2 record layout order; serialization relies on it.
+  @fields [
     :record_descriptor_word,
     :record_identifier,
     :cycle_number,
@@ -18,14 +20,23 @@ defmodule Metro2.Records.HeaderSegment do
     :activity_date,
     :created_date,
     :program_date,
-    :program_revisition_date,
+    :program_revision_date,
     :reporter_name,
     :reporter_address,
     :reporter_telephone_number,
     :software_vendor_name,
     :software_version_number,
+    :prbc_program_identifier,
     :reserved
   ]
+
+  defstruct @fields
+
+  @doc false
+  def fields, do: @fields
+
+  @doc false
+  def record_length, do: Metro2.Base.fixed_length()
 
   @doc """
   Creates a new HeaderSegment with properly initialized fields
@@ -42,15 +53,17 @@ defmodule Metro2.Records.HeaderSegment do
       activity_date: Date.new(),
       created_date: Date.new(),
       program_date: Date.new(),
-      program_revisition_date: Date.new(),
-      reporter_name: Alphanumeric.new(40),
+      program_revision_date: Date.new(),
+      reporter_name: Alphanumeric.new_with_dot_dash_slash(40),
       reporter_address: Alphanumeric.new_with_dot_dash_slash(96),
-      reporter_telephone_number: Numeric.new(10),
+      reporter_telephone_number: Numeric.new_identifier(10),
       software_vendor_name: Alphanumeric.new(40, "Metro2Elix"),
       software_version_number: Alphanumeric.new(5, Metro2.Base.version_string()),
-      reserved: Alphanumeric.new(156, nil)
+      prbc_program_identifier: Alphanumeric.new(10),
+      reserved: Alphanumeric.new(146, nil)
     }
   end
 
+  @doc false
   def to_metro2(segment), do: Metro2.Segment.to_metro2(segment)
 end

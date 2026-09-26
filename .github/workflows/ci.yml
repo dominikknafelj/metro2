@@ -17,18 +17,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # minimum supported version (mix.exs: ~> 1.14)
           - elixir: '1.14'
             otp: '25'
-          - elixir: '1.15'
-            otp: '26'
-          - elixir: '1.16'
-            otp: '26'
           - elixir: '1.17'
             otp: '27'
+          - elixir: '1.18'
+            otp: '27'
+          - elixir: '1.19'
+            otp: '28'
+          # latest
+          - elixir: '1.20'
+            otp: '29'
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
@@ -37,14 +41,14 @@ jobs:
           otp-version: ${{ matrix.otp }}
 
       - name: Restore dependencies cache
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
 
       - name: Restore compiled code cache
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: _build
           key: ${{ runner.os }}-build-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
@@ -64,7 +68,7 @@ jobs:
 
       - name: Run demo (smoke test)
         run: mix run demo.exs
-        if: matrix.elixir == '1.17' && matrix.otp == '27'
+        if: matrix.elixir == '1.20' && matrix.otp == '29'
 
   quality:
     name: Code Quality
@@ -74,23 +78,23 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: '1.17'
-          otp-version: '27'
+          elixir-version: '1.20'
+          otp-version: '29'
 
       - name: Restore dependencies cache
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
 
       - name: Restore compiled code cache
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: _build
           key: ${{ runner.os }}-build-quality-${{ hashFiles('**/mix.lock') }}

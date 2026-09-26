@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-09-26
+
+### Fixed
+- **Records are now spec-compliant**: fields are written in METRO 2 position order (previously map order) and each record is one 426-character line (previously one line per field)
+- Tailer record identifier is `TRAILER` (was truncated to `TRAILE`, making the tailer 425 characters)
+- Negative monetary amounts are reported as zero instead of producing `000000-50`
+- Newlines and tabs are rejected in alphanumeric fields (`\s` allowed them, which split records)
+- ECOA code `Z` is counted in the tailer (only lowercase `z` was counted)
+- `terms_frequency` `:semimonthly` is `E` (both semimonthly and semiannually were `S`)
+- Tailer `*_in_base`, `*_in_j1`, `*_in_j2` SSN/date of birth counters are populated
+- Base segments are serialized in insertion order (were reversed)
+- Integer account statuses are zero padded (`5` → `05`) instead of crashing the tailer; tailer fields are no longer created with `String.to_atom`
+
+### Added
+- J1, J2, K1, K2, K3, K4, L1 and N1 appended segments (`BaseSegment.add_segment/2`); layouts cross-checked against [moov-io/metro2](https://github.com/moov-io/metro2)
+- Header `prbc_program_identifier` field (positions 271-280, previously part of the reserved block)
+- Portfolio type `L` (lease); payment history codes `Z` (too new to rate) and blank
+- Closed code lists for account type, special comment, K1 creditor classification, K2 purchased/sold indicator, K3 agency identifier, K4 specialized payment indicator and L1 change indicator, with humanized atoms
+- Payment rating must be blank for account statuses that don't use it
+- `Metro2.File.validate/1` collecting every invalid field and cross-field rule violation; `serialize/1` raises `Metro2.ValidationError` listing all of them
+- `Metro2.Rules` cross-field consistency rules: confirmed rules are errors; unconfirmed ones (delinquency date, amount past due, balance on closed accounts) are warnings reported by `Metro2.File.warnings/1`
+- `Metro2.Fields.cast/3` to validate while setting a value
+- `Metro2.File.stream/2` for lazy serialization of large files
+- `Metro2.Parser` to parse 426-character METRO 2 content
+- Closed code lists are enforced; code fields accept humanized atoms (`:current`)
+- Complete ECOA, payment rating and compliance condition code lists
+- Text normalization: upper casing, accent transliteration, removal of apostrophes (names) and commas/`#` (addresses), separators in SSNs/telephone numbers, dashes in postal codes
+- Dates accept ISO 8601 strings, `DateTime` and `NaiveDateTime`
+- Header `activity_date` and `created_date` default to today
+
+### Changed
+- **BREAKING**: `serialize/1` raises `Metro2.ValidationError` instead of `ArgumentError` and applies the cross-field error rules
+- **BREAKING**: header field `program_revisition_date` renamed to `program_revision_date`
+- **BREAKING**: alphanumeric output is upper cased
+- **BREAKING**: `account_type` and `special_comment` only accept codes from the METRO 2 lists
+- Removed the `timex` dependency (uses `Calendar.strftime/2`)
+- README installation uses the Hex package name (`hex: :metro2`)
+
 ## [0.2.0] - 2025-07-12
 
 ### Changed
@@ -12,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `timex` dependency from `~> 3.0` to `~> 3.7`
 - Updated `credo` dependency from `~> 0.7` to `~> 1.7`
 - Updated `ex_doc` dependency from `~> 0.14` to `~> 0.31`
-- Migrated from deprecated `Mix.Config` to `Config` module
+- Migrated from the deprecated Mix.Config module to `Config`
 - Removed deprecated `build_embedded` and `preferred_cli_env` from mix.exs
 - Removed deprecated `:applications` from application config
 - Modernized mix.exs formatting and structure

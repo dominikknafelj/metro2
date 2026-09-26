@@ -4,7 +4,7 @@ defmodule Metro2.Mixfile do
   def project do
     [
       app: :metro_2,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -34,7 +34,6 @@ defmodule Metro2.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:timex, "~> 3.7"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
@@ -58,8 +57,9 @@ defmodule Metro2.Mixfile do
 
   defp docs do
     [
-      main: "Metro2",
-      extras: ["README.md"]
+      main: "readme",
+      extras: ["README.md", "guides/usage.md", "guides/segments.md", "CHANGELOG.md"],
+      groups_for_extras: [Guides: ~r/guides\//]
     ]
   end
 end

@@ -81,7 +81,7 @@ defmodule Metro2.FieldValidationTest do
       # Invalid characters should raise an error during serialization
       invalid_addresses = [
         "123 Main St@",
-        "456 Oak Ave#2",
+        "456 Oak Ave!2",
         "789 Pine St%",
         "1010 Elm Dr&"
       ]
