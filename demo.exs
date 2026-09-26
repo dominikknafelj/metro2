@@ -68,6 +68,7 @@ account2 =
   |> Fields.put(:account_status, "71") # 30-59 days past due
   |> Fields.put(:current_balance, 8500)
   |> Fields.put(:amount_past_due, 250)
+  |> Fields.put(:first_delinquency_date, ~D[2025-06-15]) # required for delinquent statuses
   |> Fields.put(:scheduled_monthly_payment_amount, 200)
   |> Fields.put(:actual_payment_amount, 0)
   # Consumer information
@@ -89,7 +90,8 @@ account3 =
   |> Fields.put(:consumer_account_number, "3001234567")
   |> Fields.put(:portfolio_type, "M")  # Mortgage
   |> Fields.put(:account_type, "01")
-  |> Fields.put(:account_status, "13") # Closed
+  |> Fields.put(:account_status, :closed) # humanized atoms work for code fields ("13")
+  |> Fields.put(:payment_rating, "0")  # required for status 13: was current when closed
   |> Fields.put(:current_balance, 0)
   |> Fields.put(:scheduled_monthly_payment_amount, 0)
   |> Fields.put(:actual_payment_amount, 0)
@@ -124,13 +126,18 @@ IO.puts("  ✅ Valid characters in addresses (dots, dashes, slashes allowed):")
 IO.puts("     - 456 Oak Ave./Apt 2B ✓")
 IO.puts("     - St. Petersburg ✓")
 
-IO.puts("  ❌ Testing invalid characters (should fail):")
+IO.puts("  ✅ Normalized automatically:")
+IO.puts("     - O'Connor → OCONNOR (apostrophes removed from names)")
+IO.puts("     - García → GARCIA (accents transliterated, upper cased)")
+IO.puts("     - 12 Main St, Apt #2 → 12 MAIN ST APT 2 (commas and # removed from addresses)")
+
+IO.puts("  ❌ Testing invalid values (should fail):")
 
 # Test invalid characters
 invalid_tests = [
   {:surname, "Smith@Johnson", "@"},
-  {:surname, "O'Connor", "apostrophe"},
-  {:surname, "García", "accented character"},
+  {:surname, "Smith\nJohnson", "newline"},
+  {:account_status, "XX", "unknown account status code"},
   {:address_1, "123 Main St%", "%"},
   {:account_type, "ABC-123", "dash in account_type"}
 ]
@@ -162,7 +169,7 @@ IO.puts("\n📊 File Structure Analysis:")
 IO.puts("  - Header segment: 1 line")
 IO.puts("  - Base segments: 3 lines (one per account)")
 IO.puts("  - Tailer segment: 1 line")
-IO.puts("  - Field data: #{length(lines) - 4} lines")
+IO.puts("  - Record length: #{lines |> Enum.map(&String.length/1) |> Enum.uniq() |> Enum.join(", ")} characters")
 
 # Show sample output
 IO.puts("\n📄 Sample Metro2 Output (first 3 lines):")
@@ -196,7 +203,8 @@ IO.puts("   • Realistic consumer account data")
 IO.puts("   • Compliant METRO 2® format output")
 IO.puts("   • Name fields supporting dashes (Smith-Johnson)")
 IO.puts("   • Address fields supporting dots/dashes/slashes")
-IO.puts("   • Proper rejection of invalid characters")
+IO.puts("   • Proper rejection of invalid values")
+IO.puts("   • Cross-field validation (e.g. delinquency date for past-due accounts)")
 IO.puts("   • Modern Elixir #{System.version()}")
 IO.puts("\n📁 Output file: demo_output.metro2")
 IO.puts("🔍 Use 'cat demo_output.metro2' to view the generated Metro2 content") 

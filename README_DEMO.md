@@ -8,7 +8,7 @@ This demo showcases the Metro2 library's functionality with realistic example da
   - Name fields (surname, first_name, middle_name) accept alphanumeric + dashes
   - Address fields accept alphanumeric + dots/dashes/slashes  
   - Regular fields accept only alphanumeric characters
-  - Invalid characters are properly rejected
+  - Invalid characters are properly rejected; apostrophes, accents, commas and `#` are normalized
 
 - **Realistic Data**: Creates 3 consumer accounts with different scenarios:
   - Account 1: John Smith-Johnson (Current account)
@@ -63,10 +63,15 @@ The demo will:
 - Addresses: `456 Oak Ave./Apt 2B` (dots and slashes allowed)
 - Cities: `St. Petersburg` (dots allowed)
 
-❌ **Invalid Characters (properly rejected):**
+🔄 **Normalized automatically:**
+- Names: `O'Connor` → `OCONNOR` (apostrophes removed)
+- Names: `García` → `GARCIA` (accents transliterated, text upper cased)
+- Addresses: `12 Main St, Apt #2` → `12 MAIN ST APT 2` (commas and `#` removed)
+
+❌ **Invalid values (properly rejected):**
 - Names: `Smith@Johnson` (@ not allowed)
-- Names: `O'Connor` (apostrophe not allowed)
-- Names: `García` (accented characters not allowed)
+- Names: `Smith\nJohnson` (control characters not allowed)
+- Account status: `XX` (not a valid status code)
 - Addresses: `123 Main St%` (% not allowed)
 - Account Types: `ABC-123` (dash not allowed in regular fields)
 

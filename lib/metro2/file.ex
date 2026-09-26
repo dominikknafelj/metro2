@@ -1,14 +1,18 @@
 defmodule Metro2.File do
   @moduledoc """
   This module defines the initial struct of the the metro2 file struct, further it contains the serialisation method,
-  wich ultimately returns a string containing the struct as valid metro2 file content.
+  which ultimately returns a string containing the struct as valid metro2 file content.
+
+  Records are written one per line: the header, the base segments in the order they were
+  added, and a tailer computed from the base segments. For large files use `stream/2`,
+  which never holds more than one base segment in memory.
   """
   alias Metro2.Records.BaseSegment
   alias Metro2.Records.HeaderSegment
   alias Metro2.Records.TailerSegment
+  alias Metro2.Rules
   alias Metro2.Segment
-
-  import Metro2.Fields, only: [get: 2]
+  alias Metro2.ValidationError
 
   defstruct [
     :header,
@@ -27,16 +31,9 @@ defmodule Metro2.File do
     }
   end
 
-  # struct which map the fields from the base segments to the corresponding fields in the tailer segments
-  @field_mapping %{
-    ecoa_code: :ecoa_code_z,
-    social_security_number: :total_social_security_numbers,
-    date_of_birth: :total_date_of_births,
-    telephone_number: :total_telephone_numbers
-  }
-
   @doc """
-  Add a base segement to the base segment list in the file struct.
+  Add a base segment to the file. `base_segments` is kept newest-first internally;
+  segments are serialized in the order they were added.
   """
   def add_base_segment(%Metro2.File{} = file, %BaseSegment{} = segment) do
     list = Map.get(file, :base_segments)
@@ -44,82 +41,102 @@ defmodule Metro2.File do
   end
 
   @doc """
-  converts and serializes a Metro2.File struct into a Metro2 conform string
+  Validates every field of the header and base segments (including appended segments) and
+  the cross-field rules of `Metro2.Rules`.
+
+  Returns `:ok` or `{:error, errors}` with all errors; see `Metro2.ValidationError` for
+  their shape.
+  """
+  def validate(%Metro2.File{} = file) do
+    header_errors = errors_for(:header, :header, file.header)
+
+    base_errors =
+      file.base_segments
+      |> Enum.reverse()
+      |> Enum.with_index(1)
+      |> Enum.flat_map(fn {base, index} -> base_errors(base, index) end)
+
+    case header_errors ++ base_errors do
+      [] -> :ok
+      errors -> {:error, errors}
+    end
+  end
+
+  @doc """
+  converts and serializes a Metro2.File struct into a Metro2 conform string.
+  Raises `Metro2.ValidationError` listing every invalid field when the file is invalid.
   """
   def serialize(%Metro2.File{} = file) do
-    tailer_segment = TailerSegment.new() |> count_base_segment(file.base_segments)
-
-    file
-    |> Map.put(:tailer, tailer_segment)
-    |> to_metro2
-    |> List.flatten()
-    |> Enum.join("\n")
-  end
-
-  @doc false
-  # terminal definition for the base segment counter
-  defp count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, []), do: tailer_segment
-
-  @doc false
-  # recursive counter to update the tailer segment for each base segment.
-  defp count_base_segment(%Metro2.Records.TailerSegment{} = tailer_segment, [head | tail]) do
-    tailer_segment
-    |> increment_status_code(head)
-    |> conditional_increment(head, :social_security_number)
-    |> conditional_increment(head, :date_of_birth)
-    |> conditional_increment(head, :telephone_number)
-    |> conditional_increment(head, :ecoa_code)
-    |> increment_total_base_records
-    |> count_base_segment(tail)
-  end
-
-  @doc false
-  # counts up the total_base_records field in the tailer
-  defp increment_total_base_records(%TailerSegment{} = tailer) do
-    tailer |> TailerSegment.increment_field(:total_base_records)
-  end
-
-  @doc false
-  # determines the status code of the base segment and counts the corresponding field in the tailer segment up.
-  defp increment_status_code(%TailerSegment{} = tailer, %{} = segment) do
-    account_status = get(segment, :account_status) |> account_status_to_s()
-    tailer_field = ("total_status_code_" <> account_status) |> String.downcase() |> String.to_atom()
-    tailer |> TailerSegment.increment_field(tailer_field)
-  end
-
-  @doc false
-  # casts possible integer values to string.
-  # default to current status when nil
-  defp account_status_to_s(nil), do: "11"
-  defp account_status_to_s(status) when is_integer(status), do: Integer.to_string(status)
-  defp account_status_to_s(status) when is_binary(status), do: status
-
-  @doc false
-  # counts up the ecoa_code_z field in the tailer segment if the base segment's is z.
-  defp conditional_increment(%TailerSegment{} = tailer, %{} = segment, :ecoa_code = field) do
-    case get(segment, field) do
-      x when x == "z" -> TailerSegment.increment_field(tailer, :ecoa_code_z)
-      _ -> tailer
+    case validate(file) do
+      :ok -> file.header |> stream(Enum.reverse(file.base_segments)) |> Enum.join()
+      {:error, errors} -> raise ValidationError, errors: errors
     end
   end
 
-  @doc false
-  # counts up the field in the tailer segment, if the corresponding value in the base segment is not nil
-  defp conditional_increment(%TailerSegment{} = tailer, %{} = segment, field) do
-    case get(segment, field) do
-      nil -> tailer
-      _ -> TailerSegment.increment_field(tailer, Map.get(@field_mapping, field))
+  @doc """
+  Lazily serializes a header and an enumerable of base segments into a stream of strings
+  (header, one per base segment, tailer). The tailer counts are accumulated while streaming.
+
+  Each record is validated as it is emitted; an invalid record raises
+  `Metro2.ValidationError` while the stream is consumed.
+
+      Metro2.File.stream(header, accounts_stream)
+      |> Stream.into(Elixir.File.stream!("out.metro2"))
+      |> Stream.run()
+  """
+  def stream(%HeaderSegment{} = header, base_segments) do
+    header = with_default_dates(header)
+
+    case errors_for(:header, :header, header) do
+      [] -> :ok
+      errors -> raise ValidationError, errors: errors
     end
+
+    base_records =
+      base_segments
+      |> Stream.concat([:tailer])
+      |> Stream.transform({1, %{}}, fn
+        :tailer, {index, counts} ->
+          {["\n" <> Segment.to_metro2(TailerSegment.from_counts(counts))], {index, counts}}
+
+        %BaseSegment{} = base, {index, counts} ->
+          case base_errors(base, index) do
+            [] ->
+              {["\n" <> Segment.to_metro2(base)], {index + 1, TailerSegment.count(counts, base)}}
+
+            errors ->
+              raise ValidationError, errors: errors
+          end
+      end)
+
+    Stream.concat([Segment.to_metro2(header)], base_records)
   end
 
-  @doc false
-  # generates a list with every segment in the metro2 file structure
-  defp to_metro2(%Metro2.File{} = file) do
-    elements =
-      file.base_segments
-      |> Enum.filter(&is_map/1)
-      |> Enum.map(&Segment.to_metro2/1)
+  defp with_default_dates(header) do
+    today = Date.utc_today()
 
-    [Segment.to_metro2(file.header) | elements] ++ [Segment.to_metro2(file.tailer)]
+    Enum.reduce([:activity_date, :created_date], header, fn field, acc ->
+      if Metro2.Fields.get(acc, field) == nil, do: Metro2.Fields.put(acc, field, today), else: acc
+    end)
+  end
+
+  defp base_errors(base, index) do
+    record = {:base, index}
+
+    rule_errors =
+      for {field, message} <- Rules.base_errors(base),
+          do: %{record: record, segment: :base, field: field, message: message}
+
+    appendage_errors =
+      base
+      |> BaseSegment.appendages()
+      |> Enum.flat_map(&errors_for(record, &1.__struct__.segment_key(), &1))
+
+    errors_for(record, :base, base) ++ rule_errors ++ appendage_errors
+  end
+
+  defp errors_for(record, segment_name, segment) do
+    for {field, message} <- Segment.field_errors(segment),
+        do: %{record: record, segment: segment_name, field: field, message: message}
   end
 end
