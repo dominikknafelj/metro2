@@ -102,12 +102,13 @@ defmodule Metro2.Parser do
       field_struct = Map.fetch!(segment, field)
       width = Fields.width(field_struct)
 
-      with <<chunk::binary-size(width), rest::binary>> <- rest,
+      with true <- byte_size(rest) >= width,
+           {chunk, rest} = :erlang.split_binary(rest, width),
            {:ok, parsed} <- Fields.parse(field_struct, chunk) do
         {:cont, {:ok, Map.put(segment, field, parsed), rest}}
       else
+        false -> {:halt, {:error, "record too short to contain #{field}"}}
         {:error, message} -> {:halt, {:error, "#{field}: #{message}"}}
-        _ -> {:halt, {:error, "record too short to contain #{field}"}}
       end
     end)
   end
