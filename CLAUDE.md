@@ -22,6 +22,8 @@ mix run demo.exs                   # smoke test; writes demo_output.metro2 (giti
 
 CI (`.github/workflows/ci.yml`) runs the test job on Elixir 1.14–1.17 / OTP 25–27 and a separate quality job (format, credo --strict, unused deps). Run all of the above before considering a change done.
 
+User-facing docs live in `guides/usage.md` and `guides/segments.md` (ex_doc extras, see `docs/0` in `mix.exs`). Keep their code examples runnable when changing the API.
+
 ## Architecture
 
 Data flows **segment struct of field structs → `Fields.format/1` per field → `Segment.to_metro2/1` per record → `File.stream/2` / `File.serialize/1`**. `Metro2.Parser` runs the same layout in reverse via each field type's `width/1` and `parse/2`.

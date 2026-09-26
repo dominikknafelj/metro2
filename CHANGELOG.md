@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `timex` dependency from `~> 3.0` to `~> 3.7`
 - Updated `credo` dependency from `~> 0.7` to `~> 1.7`
 - Updated `ex_doc` dependency from `~> 0.14` to `~> 0.31`
-- Migrated from deprecated `Mix.Config` to `Config` module
+- Migrated from the deprecated Mix.Config module to `Config`
 - Removed deprecated `build_embedded` and `preferred_cli_env` from mix.exs
 - Removed deprecated `:applications` from application config
 - Modernized mix.exs formatting and structure

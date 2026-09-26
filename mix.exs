@@ -57,8 +57,9 @@ defmodule Metro2.Mixfile do
 
   defp docs do
     [
-      main: "Metro2",
-      extras: ["README.md"]
+      main: "readme",
+      extras: ["README.md", "guides/usage.md", "guides/segments.md", "CHANGELOG.md"],
+      groups_for_extras: [Guides: ~r/guides\//]
     ]
   end
 end

@@ -16,6 +16,11 @@ def deps do
 end
 ```
 
+## Documentation
+
+- [Usage guide](guides/usage.md): building, validating, writing and reading files, with common account scenarios (current, past due, closed, charged off, joint accounts, account number changes)
+- [Segments guide](guides/segments.md): what each segment (header, base, J1, J2, K1–K4, L1, N1, tailer) is for and what its fields mean
+
 ## Demo
 
 Try the interactive demo to see the library in action with realistic credit reporting data:
@@ -32,7 +37,7 @@ The demo showcases:
 
 **Output**: Creates `demo_output.metro2` with 5 fixed-length (426-character) METRO 2® records: header, 3 base segments, and tailer.
 
-For detailed demo documentation, see [README_DEMO.md](README_DEMO.md).
+For detailed demo documentation, see [README_DEMO.md](https://github.com/dominikknafelj/metro2/blob/master/README_DEMO.md).
 
 ## Usage
 Every segment struct contains field structs, which contain information about the individual field length, type and allowed characters, which are important for the serialization process. 
