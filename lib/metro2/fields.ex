@@ -80,13 +80,6 @@ defmodule Metro2.Fields do
       }
     end
 
-    @doc """
-    Creates an alphanumeric field whose value must be one of `valid_codes`.
-    """
-    def new_enum(required_length, valid_codes, value \\ nil) do
-      %{build(required_length, value, Base.alphanumeric(), []) | valid_codes: valid_codes}
-    end
-
     defp build(required_length, value, permitted_chars, opts) do
       %__MODULE__{
         value: value,

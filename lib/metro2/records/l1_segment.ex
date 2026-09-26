@@ -1,7 +1,7 @@
 defmodule Metro2.Records.L1Segment do
   @moduledoc """
   L1 segment: account number / identification number change.
-  `change_indicator`: "1" account number, "2" identification number, "3" both.
+  `change_indicator`: "1" (`:account_number`), "2" (`:identification_number`), "3" (`:both`).
   54 characters, appended to a base segment with `Metro2.Records.BaseSegment.add_segment/2`.
   """
   alias Metro2.Fields.Alphanumeric
@@ -32,7 +32,7 @@ defmodule Metro2.Records.L1Segment do
   def new do
     %__MODULE__{
       segment_identifier: Alphanumeric.new(2, "L1"),
-      change_indicator: Alphanumeric.new_enum(1, ~w(1 2 3)),
+      change_indicator: Alphanumeric.new_code(1, :change_indicator),
       new_consumer_account_number: Alphanumeric.new(30),
       new_identification_number: Alphanumeric.new(20),
       reserved: Alphanumeric.new(1)

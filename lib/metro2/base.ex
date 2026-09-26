@@ -11,10 +11,11 @@ defmodule Metro2.Base do
     installment: "I",
     mortgage: "M",
     open_account: "O",
-    revolving: "R"
+    revolving: "R",
+    lease: "L"
   }
 
-  # Partial humanized map; account_type accepts any 2-character code.
+  # Partial humanized map; the complete code list is in @valid_codes.
   @account_type %{
     unsecured: "01",
     education: "12"
@@ -32,7 +33,7 @@ defmodule Metro2.Base do
     delete_consumer: "Z"
   }
 
-  # Partial humanized map; special_comment accepts any 1-2 character code.
+  # Partial humanized map; the complete code list is in @valid_codes.
   @special_comment_code %{
     partial_payment_agreement: "AC",
     paid_in_full_less_than_full_balance: "AU",
@@ -119,7 +120,8 @@ defmodule Metro2.Base do
     foreclosure_completed: "H",
     voluntary_surrender: "J",
     repossession: "K",
-    charge_off: "L"
+    charge_off: "L",
+    too_new_to_rate: "Z"
   }
 
   @consumer_transaction_type %{
@@ -183,6 +185,47 @@ defmodule Metro2.Base do
     withdrawn_ch13: "P"
   }
 
+  @purchased_from_sold_to_indicator %{
+    purchased_from: "1",
+    sold_to: "2",
+    remove: "9"
+  }
+
+  @change_indicator %{
+    account_number: "1",
+    identification_number: "2",
+    both: "3"
+  }
+
+  @specialized_payment_indicator %{
+    balloon_payment: "01",
+    deferred_payment: "02"
+  }
+
+  @agency_identifier %{
+    not_applicable: "00",
+    fannie_mae: "01",
+    freddie_mac: "02"
+  }
+
+  @creditor_classification %{
+    retail: "01",
+    medical: "02",
+    oil: "03",
+    government: "04",
+    personal: "05",
+    insurance: "06",
+    educational: "07",
+    banking: "08",
+    rental: "09",
+    utilities: "10",
+    cable: "11",
+    financial: "12",
+    credit: "13",
+    automotive: "14",
+    guarantee: "15"
+  }
+
   @code_tables %{
     portfolio_type: @portfolio_type,
     account_type: @account_type,
@@ -197,13 +240,29 @@ defmodule Metro2.Base do
     address_indicator: @address_indicator,
     residence_code: @residence_code,
     generation_code: @generation_code,
-    consumer_information_indicator: @consumer_information_indicator
+    consumer_information_indicator: @consumer_information_indicator,
+    purchased_from_sold_to_indicator: @purchased_from_sold_to_indicator,
+    change_indicator: @change_indicator,
+    specialized_payment_indicator: @specialized_payment_indicator,
+    agency_identifier: @agency_identifier,
+    creditor_classification: @creditor_classification
   }
 
   # Fields whose values must come from a closed list. Tables missing here are open:
   # any value made of permitted characters is accepted.
+  # Account type and special comment lists match moov-io/metro2 (pkg/lib/constants.go).
   @valid_codes %{
     portfolio_type: Map.values(@portfolio_type),
+    account_type: ~w(00 01 02 03 04 05 06 07 08 0A 0C 0F 0G 10 11 12 13 15 17 18 19 20 25 26 29 2A
+                     2C 37 3A 43 47 48 4D 50 5A 5B 65 66 67 68 69 6A 6B 6D 70 71 72 73 74 75 77 7A
+                     7B 89 8A 8B 90 91 92 93 95 9A 9B),
+    special_comment: ~w(B C H I M O S V AB AC AH AI AM AN AO AP AS AT AU AV AW AX AZ BA BB BC BD BE
+                        BF BG BH BI BJ BK BL BN BO BP BS BT CH CI CJ CK CL CM CN CO CP CS DE),
+    purchased_from_sold_to_indicator: Map.values(@purchased_from_sold_to_indicator),
+    change_indicator: Map.values(@change_indicator),
+    specialized_payment_indicator: Map.values(@specialized_payment_indicator),
+    agency_identifier: Map.values(@agency_identifier),
+    creditor_classification: Map.values(@creditor_classification),
     ecoa_code: Map.values(@ecoa_code),
     compliance_condition_code: ~w(XA XB XC XD XE XF XG XH XJ XR),
     interest_type_indicator: Map.values(@interest_type_indicator),

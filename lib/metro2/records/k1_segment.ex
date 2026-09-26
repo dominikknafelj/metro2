@@ -30,7 +30,7 @@ defmodule Metro2.Records.K1Segment do
     %__MODULE__{
       segment_identifier: Alphanumeric.new(2, "K1"),
       original_creditor_name: Alphanumeric.new_with_dot_dash_slash(30),
-      creditor_classification: Alphanumeric.new(2)
+      creditor_classification: Alphanumeric.new_code(2, :creditor_classification)
     }
   end
 end

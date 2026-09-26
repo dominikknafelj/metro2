@@ -1,7 +1,7 @@
 defmodule Metro2.Records.K4Segment do
   @moduledoc """
   K4 segment: specialized payment information.
-  `specialized_payment_indicator`: "1" balloon payment, "2" deferred payment.
+  `specialized_payment_indicator`: "01" balloon payment, "02" deferred payment.
   30 characters, appended to a base segment with `Metro2.Records.BaseSegment.add_segment/2`.
   """
   alias Metro2.Fields.Alphanumeric
@@ -35,11 +35,11 @@ defmodule Metro2.Records.K4Segment do
   def new do
     %__MODULE__{
       segment_identifier: Alphanumeric.new(2, "K4"),
-      specialized_payment_indicator: Alphanumeric.new_enum(1, ~w(1 2)),
+      specialized_payment_indicator: Alphanumeric.new_code(2, :specialized_payment_indicator),
       deferred_payment_start_date: Date.new(),
       balloon_payment_due_date: Date.new(),
       balloon_payment_amount: Monetary.new(),
-      reserved: Alphanumeric.new(2)
+      reserved: Alphanumeric.new(1)
     }
   end
 end

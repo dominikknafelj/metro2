@@ -26,6 +26,7 @@ defmodule Metro2.Records.HeaderSegment do
     :reporter_telephone_number,
     :software_vendor_name,
     :software_version_number,
+    :prbc_program_identifier,
     :reserved
   ]
 
@@ -58,7 +59,8 @@ defmodule Metro2.Records.HeaderSegment do
       reporter_telephone_number: Numeric.new_identifier(10),
       software_vendor_name: Alphanumeric.new(40, "Metro2Elix"),
       software_version_number: Alphanumeric.new(5, Metro2.Base.version_string()),
-      reserved: Alphanumeric.new(156, nil)
+      prbc_program_identifier: Alphanumeric.new(10),
+      reserved: Alphanumeric.new(146, nil)
     }
   end
 

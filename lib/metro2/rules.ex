@@ -5,7 +5,8 @@ defmodule Metro2.Rules do
   This is a subset of the rules in the Credit Reporting Resource Guide (CRRG):
 
     * `account_status` is required
-    * statuses 05, 13, 65, 88, 89, 94 and 95 require a `payment_rating`
+    * statuses 05, 13, 65, 88, 89, 94 and 95 require a `payment_rating`; other statuses
+      must leave it blank
     * delinquent statuses (71-84, 93, 97) require a `first_delinquency_date`
     * status 11 (current) must not report an `amount_past_due`
     * past-due statuses (71-84) must report an `amount_past_due`
@@ -18,7 +19,9 @@ defmodule Metro2.Rules do
   @delinquent ~w(71 78 80 82 83 84 93 97)
   @past_due ~w(71 78 80 82 83 84)
   @paid_or_closed ~w(13 61 62 63 64 65)
+  # blank months (no history reported) are allowed as well
   @history_codes Base.payment_history_profile() |> Map.values() |> Enum.join()
+  @history_chars @history_codes <> " "
 
   @doc """
   Returns `[{field, message}]` for every rule the base segment violates.
@@ -31,6 +34,9 @@ defmodule Metro2.Rules do
       {:payment_rating, "is required for account status #{status}",
        Base.account_status_needs_payment_rating?(status) and
          Segment.value(base, :payment_rating) == nil},
+      {:payment_rating, "must be blank for account status #{status}",
+       status != nil and not Base.account_status_needs_payment_rating?(status) and
+         Segment.value(base, :payment_rating) != nil},
       {:first_delinquency_date, "is required for account status #{status}",
        status in @delinquent and not Segment.present?(base, :first_delinquency_date)},
       {:amount_past_due, "must be 0 for account status 11 (current)",
@@ -57,6 +63,6 @@ defmodule Metro2.Rules do
   defp invalid_history?(nil), do: false
 
   defp invalid_history?(profile) do
-    profile |> String.graphemes() |> Enum.any?(&(not String.contains?(@history_codes, &1)))
+    profile |> String.graphemes() |> Enum.any?(&(not String.contains?(@history_chars, &1)))
   end
 end

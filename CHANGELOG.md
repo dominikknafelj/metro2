@@ -19,7 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integer account statuses are zero padded (`5` → `05`) instead of crashing the tailer; tailer fields are no longer created with `String.to_atom`
 
 ### Added
-- J1, J2, K1, K2, K3, K4, L1 and N1 appended segments (`BaseSegment.add_segment/2`)
+- J1, J2, K1, K2, K3, K4, L1 and N1 appended segments (`BaseSegment.add_segment/2`); layouts cross-checked against [moov-io/metro2](https://github.com/moov-io/metro2)
+- Header `prbc_program_identifier` field (positions 271-280, previously part of the reserved block)
+- Portfolio type `L` (lease); payment history codes `Z` (too new to rate) and blank
+- Closed code lists for account type, special comment, K1 creditor classification, K2 purchased/sold indicator, K3 agency identifier, K4 specialized payment indicator and L1 change indicator, with humanized atoms
+- Payment rating must be blank for account statuses that don't use it
 - `Metro2.File.validate/1` collecting every invalid field and cross-field rule violation; `serialize/1` raises `Metro2.ValidationError` listing all of them
 - `Metro2.Rules` cross-field consistency rules
 - `Metro2.Fields.cast/3` to validate while setting a value
@@ -35,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: `serialize/1` raises `Metro2.ValidationError` instead of `ArgumentError` and applies the cross-field rules
 - **BREAKING**: header field `program_revisition_date` renamed to `program_revision_date`
 - **BREAKING**: alphanumeric output is upper cased
+- **BREAKING**: `account_type` and `special_comment` only accept codes from the METRO 2 lists
 - Removed the `timex` dependency (uses `Calendar.strftime/2`)
 - README installation uses the Hex package name (`hex: :metro2`)
 

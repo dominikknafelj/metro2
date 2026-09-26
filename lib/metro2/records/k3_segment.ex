@@ -30,7 +30,7 @@ defmodule Metro2.Records.K3Segment do
   def new do
     %__MODULE__{
       segment_identifier: Alphanumeric.new(2, "K3"),
-      agency_identifier: Alphanumeric.new(2),
+      agency_identifier: Alphanumeric.new_code(2, :agency_identifier),
       account_number: Alphanumeric.new(18),
       mortgage_identification_number: Alphanumeric.new(18)
     }

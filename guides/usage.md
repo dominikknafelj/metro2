@@ -162,7 +162,7 @@ renumbered =
   account
   |> BaseSegment.add_segment(
     L1Segment.new()
-    |> Fields.put(:change_indicator, "1")
+    |> Fields.put(:change_indicator, :account_number)   # "1"
     |> Fields.put(:new_consumer_account_number, "2009876543")
   )
 ```

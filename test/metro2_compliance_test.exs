@@ -124,6 +124,45 @@ defmodule Metro2.ComplianceTest do
     end
   end
 
+  describe "layout and codes cross-checked against moov-io/metro2" do
+    test "K4 specialized payment indicator is two digits followed by one reserved character" do
+      k4 = Fields.put(K4Segment.new(), :specialized_payment_indicator, :deferred_payment)
+      base = BaseSegment.add_segment(current_account(), k4)
+      [_, record, _] = serialize_lines([base])
+
+      assert String.slice(record, 426, 4) == "K402"
+      assert String.length(record) == 426 + 30
+      assert format(K4Segment.new(), :specialized_payment_indicator, 1) == {:ok, "01"}
+    end
+
+    test "header has the PRBC program identifier before the reserved block" do
+      header = Fields.put(File.new().header, :prbc_program_identifier, "PRBC123")
+      [line | _] = %{File.new() | header: header} |> File.serialize() |> String.split("\n")
+      assert String.slice(line, 270, 10) == "PRBC123   "
+      assert String.length(line) == 426
+    end
+
+    test "closed code lists for account type, special comment, portfolio type" do
+      assert format(BaseSegment.new(), :account_type, "18") == {:ok, "18"}
+      assert {:error, _} = format(BaseSegment.new(), :account_type, "ZZ")
+      assert format(BaseSegment.new(), :special_comment, "AC") == {:ok, "AC"}
+      assert {:error, _} = format(BaseSegment.new(), :special_comment, "QQ")
+      assert format(BaseSegment.new(), :portfolio_type, :lease) == {:ok, "L"}
+    end
+
+    test "payment history profile accepts Z and blank months" do
+      file = File.add_base_segment(File.new(), current_account(payment_history_profile: "0Z0  0"))
+      assert File.validate(file) == :ok
+    end
+
+    test "payment rating must be blank for statuses that don't use it" do
+      file = File.add_base_segment(File.new(), current_account(payment_rating: "0"))
+
+      assert {:error, [%{field: :payment_rating, message: "must be blank" <> _}]} =
+               File.validate(file)
+    end
+  end
+
   describe "Fields.cast/3" do
     test "validates while setting" do
       assert {:ok, base} = Fields.cast(BaseSegment.new(), :surname, "Smith")

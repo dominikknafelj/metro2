@@ -15,7 +15,9 @@ segments is longer, and its RDW says by how much. The library sets the RDW for y
 
 This library implements the 426-character (character) format. The authoritative field
 definitions are in the Credit Reporting Resource Guide (CRRG®) published by the CDIA;
-check field meanings and code values there before reporting to a bureau.
+check field meanings and code values there before reporting to a bureau. Segment layouts
+and code lists have been cross-checked against the open-source
+[moov-io/metro2](https://github.com/moov-io/metro2) implementation.
 
 ## Header — `Metro2.Records.HeaderSegment`
 
@@ -30,6 +32,7 @@ Identifies the data furnisher and the reporting period. One per file, always fir
 | `program_date`, `program_revision_date` | Dates your reporting program was first reported / last revised |
 | `reporter_name`, `reporter_address`, `reporter_telephone_number` | Your organization's contact details |
 | `software_vendor_name`, `software_version_number` | Prefilled (`Metro2Elix`, `01`) |
+| `prbc_program_identifier` | Identifier for the PRBC (Pay Rent, Build Credit) program, if you report through it |
 
 ## Base — `Metro2.Records.BaseSegment`
 
@@ -42,8 +45,8 @@ consumer's identity and address. Most reporting work is filling base segments.
 |---|---|
 | `identification_number` | Your identifier as a furnisher (per bureau) |
 | `consumer_account_number` | The account number. Changing it requires an L1 segment |
-| `portfolio_type` | `:line_of_credit` (C), `:installment` (I), `:mortgage` (M), `:open_account` (O), `:revolving` (R) |
-| `account_type` | 2-character account type code (e.g. `"01"` unsecured, `"12"` education) |
+| `portfolio_type` | `:line_of_credit` (C), `:installment` (I), `:mortgage` (M), `:open_account` (O), `:revolving` (R), `:lease` (L) |
+| `account_type` | 2-character account type code (e.g. `"01"` unsecured, `"12"` education, `"18"` credit card); must be one of the codes in `Metro2.Base.valid_codes(:account_type)` |
 | `date_opened`, `closed_date`, `last_payment_date`, `account_information_date` | Key account dates |
 
 **Terms and amounts** (whole dollars; cents are dropped, negatives report as 0)
@@ -61,10 +64,10 @@ consumer's identity and address. Most reporting work is filling base segments.
 | Field | Purpose |
 |---|---|
 | `account_status` | Current state of the account; see the table below. Required |
-| `payment_rating` | How the account stood when it was closed/transferred; required for statuses 05, 13, 65, 88, 89, 94, 95 |
-| `payment_history_profile` | 24 characters, most recent month first, one code per month (`0` current, `1`–`6` 30–180+ days late, `B` no history before, `D` no history available, `E` zero balance, ...) |
+| `payment_rating` | How the account stood when it was closed/transferred; required for statuses 05, 13, 65, 88, 89, 94, 95 and blank for all others |
+| `payment_history_profile` | 24 characters, most recent month first, one code per month (`0` current, `1`–`6` 30–180+ days late, `B` no history before, `D` no history available, `E` zero balance, `Z` too new to rate, blank for no history, ...) |
 | `first_delinquency_date` | FCRA date of first delinquency; required for delinquent statuses (71–84, 93, 97) |
-| `special_comment` | Special comment code (e.g. `"AC"` partial payment agreement) |
+| `special_comment` | Special comment code (e.g. `"AC"` partial payment agreement); must be one of `Metro2.Base.valid_codes(:special_comment)` |
 | `compliance_condition_code` | Dispute status (`XA`–`XJ`, `XR` to remove) |
 
 Common `account_status` codes (humanized atoms from `Metro2.Base.account_status/0`):
@@ -89,7 +92,7 @@ Common `account_status` codes (humanized atoms from `Metro2.Base.account_status/
 | `social_security_number`, `date_of_birth`, `telephone_number` | Identifiers the bureaus match on |
 | `ecoa_code` | The consumer's relationship to the account: `:individual` (1), `:joint_contractual_liability` (2), `:authorized_user` (3), `:co_maker` (5), `:maker` (7), `:deceased` (X), `:delete_consumer` (Z), ... |
 | `consumer_information_indicator` | Bankruptcy and similar events (`:petition_ch7`, `:discharged_ch13`, ...) |
-| `consumer_transaction_type` | Signals a new account/borrower or a name, address or SSN change |
+| `consumer_transaction_type` | Signals a new account/borrower or a name, address or SSN change. Some implementations treat this position as reserved; leave it blank unless your CRRG edition defines it |
 | `country_code`, `address_1`, `address_2`, `city`, `state`, `postal_code` | Current address |
 | `address_indicator`, `residence_code` | Address type (`:confirmed`, `:military`, ...) and `:owns` / `:rents` |
 
@@ -103,11 +106,11 @@ J1 and J2 can appear several times per account; the others at most once.
 |---|---|---|
 | `J1Segment` — associated consumer, same address | 100 | Another consumer is on the account (joint borrower, authorized user, co-signer) and lives at the base consumer's address. Holds name, SSN, DOB, phone, ECOA code |
 | `J2Segment` — associated consumer, different address | 200 | Same as J1, but the associated consumer lives elsewhere; adds a full address |
-| `K1Segment` — original creditor | 34 | You are a collection agency or debt buyer: `original_creditor_name` and `creditor_classification` of who originally extended the credit |
-| `K2Segment` — purchased from / sold to | 34 | The account was bought from or sold to another company. `purchased_from_sold_to_indicator`: `"1"` purchased from, `"2"` sold to, `"9"` remove previously reported K2 data |
-| `K3Segment` — mortgage information | 40 | Mortgage accounts: agency (e.g. Fannie Mae, Freddie Mac) account number and the Mortgage Identification Number (MIN) |
-| `K4Segment` — specialized payment | 30 | Balloon or deferred payments. `specialized_payment_indicator`: `"1"` balloon, `"2"` deferred; plus the relevant dates and balloon amount |
-| `L1Segment` — account number change | 54 | The consumer account number and/or your identification number changed, so bureaus can link the old and new numbers. `change_indicator`: `"1"` account number, `"2"` identification number, `"3"` both |
+| `K1Segment` — original creditor | 34 | You are a collection agency or debt buyer: `original_creditor_name` and `creditor_classification` (`"01"`–`"15"`, e.g. `:retail`, `:medical`, `:banking`) of who originally extended the credit |
+| `K2Segment` — purchased from / sold to | 34 | The account was bought from or sold to another company. `purchased_from_sold_to_indicator`: `:purchased_from` (1), `:sold_to` (2), `:remove` (9, removes previously reported K2 data) |
+| `K3Segment` — mortgage information | 40 | Mortgage accounts: `agency_identifier` (`:not_applicable` 00, `:fannie_mae` 01, `:freddie_mac` 02), the agency account number and the Mortgage Identification Number (MIN) |
+| `K4Segment` — specialized payment | 30 | Balloon or deferred payments. `specialized_payment_indicator`: `:balloon_payment` (01) or `:deferred_payment` (02); plus the relevant dates and balloon amount |
+| `L1Segment` — account number change | 54 | The consumer account number and/or your identification number changed, so bureaus can link the old and new numbers. `change_indicator`: `:account_number` (1), `:identification_number` (2), `:both` (3) |
 | `N1Segment` — employment | 146 | Reporting the consumer's employer name, address and occupation |
 
 ## Tailer — `Metro2.Records.TailerSegment`
